@@ -82,3 +82,5 @@ export const sampleHistory = [
   { id: 4, title: "ESLint Apostrophe Fix", date: "previous" },
   { id: 5, title: "ChatGPT UI in Next.js", date: "previous" },
 ];
+
+export const baseURL = "http://192.168.1.10:9630";
