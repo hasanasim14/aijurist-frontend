@@ -329,7 +329,12 @@ import Link from "next/link";
 import { cn, sampleHistory } from "@/lib/utils";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { state, isMobile, openMobile, setOpenMobile } = useSidebar();
+  const {
+    state,
+    isMobile,
+    // , openMobile,
+    setOpenMobile,
+  } = useSidebar();
   const isCollapsed = state === "collapsed";
 
   // Create a mobile trigger that will open the sidebar sheet on mobile

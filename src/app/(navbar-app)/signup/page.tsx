@@ -13,25 +13,28 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectGroup,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/components/ui/select";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { baseURL, cities } from "@/lib/utils";
+  baseURL,
+  // , cities
+} from "@/lib/utils";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { ChevronLeft, ChevronRight, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
-  const router = useRouter();
+  // const router = useRouter();
   // Set and show password states
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -209,8 +212,9 @@ export default function SignupPage() {
       //   console.log("Yippie");
       // }
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Something went wrong!";
+      console.error(error);
+      // const errorMessage =
+      // error instanceof Error ? error.message : "Something went wrong!";
     } finally {
       setSignupLoading(false);
     }
@@ -259,9 +263,9 @@ export default function SignupPage() {
     }
   };
 
-  const handleSelectChange = (value: string) => {
-    setFormData({ ...formData, city: value });
-  };
+  // const handleSelectChange = (value: string) => {
+  //   setFormData({ ...formData, city: value });
+  // };
 
   const nextStep = () => {
     console.log(`step ${step}`, formData);
@@ -273,13 +277,13 @@ export default function SignupPage() {
     setStep(step - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Here you would typically send the data to your backend
-    console.log("Form submitted:", formData);
-    // For demo purposes, we'll just show an alert
-    // alert("Signup successful!");
-  };
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   // Here you would typically send the data to your backend
+  //   console.log("Form submitted:", formData);
+  //   // For demo purposes, we'll just show an alert
+  //   // alert("Signup successful!");
+  // };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">

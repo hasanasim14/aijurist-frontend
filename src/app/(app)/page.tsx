@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import {
   Send,
-  Plus,
   Globe,
   Lightbulb,
   Paperclip,
