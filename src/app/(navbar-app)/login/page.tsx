@@ -83,6 +83,7 @@ export default function LoginPage() {
       const data = await res.json();
       toast.success("Login successful! Redirecting...");
 
+      // Timer for redirecting
       setTimeout(() => {
         router.push("/");
       }, 1000);
