@@ -15,6 +15,8 @@ import { baseURL } from "@/lib/utils";
 import { BasicInfoStep } from "@/components/signup/StepOne";
 import { PasswordStep } from "@/components/signup/StepTwo";
 import { OTPVerificationStep } from "@/components/signup/StepThree";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 export default function SignupPage() {
   type FormDataType = {
@@ -45,6 +47,7 @@ export default function SignupPage() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordValid, setPasswordValid] = useState(false);
+  const router = useRouter();
 
   const isStepValid = () => {
     if (step === 1) {
@@ -76,10 +79,13 @@ export default function SignupPage() {
           city: formData.city,
         }),
       });
-      const data = await res.json();
-      console.log("response=>", data);
+      console.log("response=>", res);
+      toast.success("OTP sent succes sfully! Please check your email.");
       setStep(step + 1);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong!";
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setSignupLoading(false);
@@ -94,10 +100,15 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, otp: formData.otp }),
       });
-      const data = await res.json();
-      console.log("verify user otp is ", data);
-      alert("Yippie");
+      console.log("verify user otp is ", res);
+      toast.success("Account verified successfully! Welcome aboard.");
+      setTimeout(() => {
+        router.push("/");
+      }, 1000);
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong!";
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setSignupLoading(false);
@@ -155,7 +166,7 @@ export default function SignupPage() {
 
         <CardContent>
           <div className="space-y-4">
-            {step === 2 && (
+            {step === 1 && (
               <BasicInfoStep
                 {...{
                   formData,
@@ -169,7 +180,7 @@ export default function SignupPage() {
                 }}
               />
             )}
-            {step === 1 && (
+            {step === 2 && (
               <PasswordStep
                 {...{
                   formData,
@@ -188,7 +199,7 @@ export default function SignupPage() {
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex justify-between items-center">
           {step > 1 && (
             <Button
               type="button"
@@ -208,8 +219,7 @@ export default function SignupPage() {
                 (step === 1 && !isStepValid()) ||
                 (step === 2 && !passwordValid)
               }
-              // className="w"
-              className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
+              className={`${step > 1 ? "" : "w-full"} cursor-pointer`}
             >
               {signupLoading ? (
                 <Loader2 className="animate-spin mr-2" size={20} />
@@ -219,7 +229,7 @@ export default function SignupPage() {
           ) : (
             <Button
               type="submit"
-              className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
+              className={`${step > 1 ? "" : "w-full"} cursor-pointer`}
               onClick={handleOTPValidation}
               disabled={signupLoading}
             >

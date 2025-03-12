@@ -10,6 +10,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { baseURL } from "@/lib/utils";
+import toast from "react-hot-toast";
 
 interface OTPVerificationStepProps {
   formData: {
@@ -25,7 +26,7 @@ export function OTPVerificationStep({
   setFormData,
   email,
 }: OTPVerificationStepProps) {
-  const [otpCooldown, setOtpCooldown] = useState(10);
+  const [otpCooldown, setOtpCooldown] = useState(300);
   const [isResending, setIsResending] = useState(false);
 
   useEffect(() => {
@@ -43,10 +44,13 @@ export function OTPVerificationStep({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      setOtpCooldown(120); // Reset cooldown after resending
-      const data = await res.json();
-      console.log("Data=>", data);
+      setOtpCooldown(300);
+      console.log("handle Resend otp res=>", res);
+      toast.success("OTP resent successfully! Check your email.");
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong!";
+      toast.error(errorMessage);
       console.error(error);
     } finally {
       setIsResending(false);

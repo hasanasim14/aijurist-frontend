@@ -20,7 +20,6 @@ interface PasswordStepProps {
 export function PasswordStep({
   formData,
   setFormData,
-  passwordError,
   setPasswordError,
   setAllValidationsPassed,
 }: PasswordStepProps) {
@@ -95,13 +94,6 @@ export function PasswordStep({
     }
   };
 
-  // const allValidationsPassed =
-  //   validations.hasMinLength &&
-  //   validations.hasUpperCase &&
-  //   validations.hasLowerCase &&
-  //   validations.hasNumber &&
-  //   validations.passwordsMatch;
-
   return (
     <>
       <div className="relative space-y-2">
@@ -145,8 +137,6 @@ export function PasswordStep({
           </button>
         </div>
       </div>
-
-      {/* {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>} */}
 
       <div className="mt-4 space-y-1 text-sm">
         <p className="font-medium text-gray-700 mb-1">Password must:</p>

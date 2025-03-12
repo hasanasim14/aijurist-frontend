@@ -39,7 +39,6 @@ export function BasicInfoStep({
   setFormErrors,
   emailError,
   setEmailError,
-  //   emailValid,
   setEmailValid,
 }: BasicInfoStepProps) {
   // Debounce function to limit API calls
@@ -160,35 +159,6 @@ export function BasicInfoStep({
 
   return (
     <>
-      {/* {["firstName", "lastName", "email", "companyName"].map((field) => (
-        <div className="space-y-2" key={field}>
-          <Label htmlFor={field}>
-            {field.replace(/([A-Z])/g, " $1").trim()}
-          </Label>
-          <Input
-            id={field}
-            type={field === "email" ? "email" : "text"}
-            placeholder={field === "email" ? "m@example.com" : "Your " + field}
-            // value={formData[field]}
-            value={formData[field as keyof typeof formData]}
-            onChange={handleInputChange}
-            onBlur={handleBlur}
-            className={
-              formErrors[field] || (field === "email" && emailError)
-                ? "border-red-500"
-                : ""
-            }
-            required
-          />
-          {formErrors[field] && (
-            <p className="text-red-500 text-sm">{formErrors[field]}</p>
-          )}
-          {field === "email" && emailError && (
-            <p className="text-red-500 text-sm">{emailError}</p>
-          )}
-        </div>
-      ))} */}
-
       <div className="space-y-2">
         <Label htmlFor="firstName">First Name</Label>
         <Input

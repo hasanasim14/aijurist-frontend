@@ -78,12 +78,12 @@ export default function LoginPage() {
         }),
       });
 
-      if (!res.ok) throw new Error("Invalid email or password");
+      if (!res.ok) {
+        throw new Error("Invalid email or password");
+      }
 
-      // const data = await res.json();
       toast.success("Login successful! Redirecting...");
 
-      // Timer for redirecting
       setTimeout(() => {
         router.push("/");
       }, 1000);
