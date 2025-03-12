@@ -57,7 +57,7 @@ export function OTPVerificationStep({
     <>
       <div className="text-center mb-4">
         <p className="text-sm text-muted-foreground">
-          We`&apos;`ve sent a verification code to your email address. Please
+          We&apos;ve sent a verification code to your email address. Please
           enter the code below to complete your registration.
         </p>
       </div>

@@ -160,7 +160,7 @@ export function BasicInfoStep({
 
   return (
     <>
-      {["firstName", "lastName", "email", "companyName"].map((field) => (
+      {/* {["firstName", "lastName", "email", "companyName"].map((field) => (
         <div className="space-y-2" key={field}>
           <Label htmlFor={field}>
             {field.replace(/([A-Z])/g, " $1").trim()}
@@ -187,7 +187,73 @@ export function BasicInfoStep({
             <p className="text-red-500 text-sm">{emailError}</p>
           )}
         </div>
-      ))}
+      ))} */}
+
+      <div className="space-y-2">
+        <Label htmlFor="firstName">First Name</Label>
+        <Input
+          id="firstName"
+          type="text"
+          placeholder="John"
+          value={formData.firstName}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          className={formErrors.firstName ? "border-red-500" : ""}
+          required
+        />
+        {formErrors.firstName && (
+          <p className="text-red-500 text-sm">{formErrors.firstName}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="lastName">Last Name</Label>
+        <Input
+          id="lastName"
+          type="text"
+          placeholder="Doe"
+          value={formData.lastName}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          className={formErrors.lastName ? "border-red-500" : ""}
+          required
+        />
+        {formErrors.lastName && (
+          <p className="text-red-500 text-sm">{formErrors.lastName}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="m@example.com"
+          value={formData.email}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          className={formErrors.email || emailError ? "border-red-500" : ""}
+          required
+        />
+        {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+        {formErrors.email && (
+          <p className="text-red-500 text-sm">{formErrors.email}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="companyName">Company Name</Label>
+        <Input
+          id="companyName"
+          type="text"
+          placeholder="Your Company"
+          value={formData.companyName}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          className={formErrors.companyName ? "border-red-500" : ""}
+          required
+        />
+        {formErrors.companyName && (
+          <p className="text-red-500 text-sm">{formErrors.companyName}</p>
+        )}
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="city">City</Label>

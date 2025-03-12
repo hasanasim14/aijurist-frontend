@@ -44,6 +44,7 @@ export default function SignupPage() {
   const [emailValid, setEmailValid] = useState(true);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [passwordValid, setPasswordValid] = useState(false);
 
   const isStepValid = () => {
     if (step === 1) {
@@ -86,6 +87,7 @@ export default function SignupPage() {
   };
 
   const handleOTPValidation = async () => {
+    setSignupLoading(true);
     try {
       const res = await fetch(baseURL + "/verify_user_otp", {
         method: "POST",
@@ -97,6 +99,8 @@ export default function SignupPage() {
       alert("Yippie");
     } catch (error) {
       console.error(error);
+    } finally {
+      setSignupLoading(false);
     }
   };
 
@@ -116,7 +120,7 @@ export default function SignupPage() {
           </CardTitle>
           <CardDescription className="text-center">
             {step === 1
-              ? "Enter your details below."
+              ? "Let's get you started! Enter your details below"
               : step === 2
               ? "Create your account."
               : "Verify your email."}
@@ -151,7 +155,7 @@ export default function SignupPage() {
 
         <CardContent>
           <div className="space-y-4">
-            {step === 1 && (
+            {step === 2 && (
               <BasicInfoStep
                 {...{
                   formData,
@@ -165,9 +169,15 @@ export default function SignupPage() {
                 }}
               />
             )}
-            {step === 2 && (
+            {step === 1 && (
               <PasswordStep
-                {...{ formData, setFormData, passwordError, setPasswordError }}
+                {...{
+                  formData,
+                  setFormData,
+                  passwordError,
+                  setPasswordError,
+                  setAllValidationsPassed: setPasswordValid,
+                }}
               />
             )}
             {step === 3 && (
@@ -193,7 +203,13 @@ export default function SignupPage() {
             <Button
               type="button"
               onClick={() => (step === 2 ? handleRegistration() : nextStep())}
-              disabled={signupLoading || (step === 1 && !isStepValid())}
+              disabled={
+                signupLoading ||
+                (step === 1 && !isStepValid()) ||
+                (step === 2 && !passwordValid)
+              }
+              // className="w"
+              className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
             >
               {signupLoading ? (
                 <Loader2 className="animate-spin mr-2" size={20} />
@@ -203,10 +219,20 @@ export default function SignupPage() {
           ) : (
             <Button
               type="submit"
+              className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
               onClick={handleOTPValidation}
               disabled={signupLoading}
             >
-              Complete Signup <ChevronRight />
+              {signupLoading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={20} />
+                  Complete Signup <ChevronRight />
+                </>
+              ) : (
+                <>
+                  Complete Signup <ChevronRight />
+                </>
+              )}
             </Button>
           )}
         </CardFooter>

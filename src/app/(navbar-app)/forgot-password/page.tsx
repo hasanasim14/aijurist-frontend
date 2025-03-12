@@ -40,13 +40,11 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(baseURL + "/reset_password", {
+      const res = await fetch(baseURL + "/forgot_password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email,
-          token:
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjM0NTYiLCJpYXQiOjE2OTI1MjY2MDAsImV4cCI6MTY5MjUzMDIwMH0.4a8jN3wSgWq9KZoEjNw73CmYOmTQd2d6ZtF2rQqkH0A",
         }),
       });
 

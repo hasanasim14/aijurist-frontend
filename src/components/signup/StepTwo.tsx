@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, XCircle } from "lucide-react";
 
 interface PasswordStepProps {
   formData: {
@@ -14,6 +14,7 @@ interface PasswordStepProps {
   setFormData: React.Dispatch<React.SetStateAction<any>>;
   passwordError: string;
   setPasswordError: React.Dispatch<React.SetStateAction<string>>;
+  setAllValidationsPassed: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export function PasswordStep({
@@ -21,9 +22,48 @@ export function PasswordStep({
   setFormData,
   passwordError,
   setPasswordError,
+  setAllValidationsPassed,
 }: PasswordStepProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [validations, setValidations] = useState({
+    hasMinLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumber: false,
+    passwordsMatch: false,
+  });
+
+  useEffect(() => {
+    if (formData.password) {
+      setValidations({
+        hasMinLength: formData.password.length >= 8,
+        hasUpperCase: /[A-Z]/.test(formData.password),
+        hasLowerCase: /[a-z]/.test(formData.password),
+        hasNumber: /[0-9]/.test(formData.password),
+        passwordsMatch: formData.password === formData.confirmPassword,
+      });
+    } else {
+      setValidations({
+        hasMinLength: false,
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumber: false,
+        passwordsMatch: false,
+      });
+    }
+  }, [formData.password, formData.confirmPassword]);
+
+  useEffect(() => {
+    const allValid =
+      validations.hasMinLength &&
+      validations.hasUpperCase &&
+      validations.hasLowerCase &&
+      validations.hasNumber &&
+      validations.passwordsMatch;
+
+    setAllValidationsPassed(allValid);
+  }, [validations]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -54,6 +94,13 @@ export function PasswordStep({
       }, 0);
     }
   };
+
+  // const allValidationsPassed =
+  //   validations.hasMinLength &&
+  //   validations.hasUpperCase &&
+  //   validations.hasLowerCase &&
+  //   validations.hasNumber &&
+  //   validations.passwordsMatch;
 
   return (
     <>
@@ -99,7 +146,83 @@ export function PasswordStep({
         </div>
       </div>
 
-      {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>}
+      {/* {passwordError && <p className="text-red-500 text-sm">{passwordError}</p>} */}
+
+      <div className="mt-4 space-y-1 text-sm">
+        <p className="font-medium text-gray-700 mb-1">Password must:</p>
+        <div className="grid grid-cols-1 gap-1">
+          <div className="flex items-center gap-2">
+            {validations.passwordsMatch ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
+            <span
+              className={
+                validations.passwordsMatch ? "text-green-700" : "text-red-500"
+              }
+            >
+              Passwords must match
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {validations.hasMinLength ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
+            <span
+              className={
+                validations.hasMinLength ? "text-green-700" : "text-red-500"
+              }
+            >
+              Have at least 8 characters
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {validations.hasUpperCase ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
+            <span
+              className={
+                validations.hasUpperCase ? "text-green-700" : "text-red-500"
+              }
+            >
+              Contain a capital letter
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {validations.hasLowerCase ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
+            <span
+              className={
+                validations.hasLowerCase ? "text-green-700" : "text-red-500"
+              }
+            >
+              Contain a lowercase letter
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {validations.hasNumber ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-red-500" />
+            )}
+            <span
+              className={
+                validations.hasNumber ? "text-green-700" : "text-red-500"
+              }
+            >
+              Contain a number
+            </span>
+          </div>
+        </div>
+      </div>
     </>
   );
 }
