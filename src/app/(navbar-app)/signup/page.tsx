@@ -13,18 +13,15 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-// import {
-//   Select,
-//   SelectContent,
-//   SelectGroup,
-//   SelectItem,
-//   SelectTrigger,
-//   SelectValue,
-// } from "@/components/ui/select";
 import {
-  baseURL,
-  // , cities
-} from "@/lib/utils";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { baseURL, cities } from "@/lib/utils";
 import {
   InputOTP,
   InputOTPGroup,
@@ -125,8 +122,8 @@ export default function SignupPage() {
         formData.email.trim() !== "" &&
         emailValid &&
         !emailError &&
-        formData.companyName.trim() !== ""
-        //  &&formData.city !== ""
+        formData.companyName.trim() !== "" &&
+        formData.city !== ""
       );
     }
     return true;
@@ -180,11 +177,6 @@ export default function SignupPage() {
     }
   };
 
-  // const handleRegisteration = () => {
-  //   alert("Registeration Call");
-  //   console.log("Registeration Call");
-  // };
-
   const handleRegisteration = async () => {
     setSignupLoading(true);
     try {
@@ -198,8 +190,8 @@ export default function SignupPage() {
           email: formData.email,
           password: formData.password,
           companyName: formData.password,
-          // city: formData.city,
-          city: "Karachi",
+          city: formData.city,
+          // city: "Karachi",
         }),
       });
 
@@ -263,10 +255,6 @@ export default function SignupPage() {
     }
   };
 
-  // const handleSelectChange = (value: string) => {
-  //   setFormData({ ...formData, city: value });
-  // };
-
   const nextStep = () => {
     console.log(`step ${step}`, formData);
     if (step === 2 && passwordError) return;
@@ -277,13 +265,13 @@ export default function SignupPage() {
     setStep(step - 1);
   };
 
-  // const handleSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   // Here you would typically send the data to your backend
-  //   console.log("Form submitted:", formData);
-  //   // For demo purposes, we'll just show an alert
-  //   // alert("Signup successful!");
-  // };
+  const cityOptions = useMemo(() => {
+    return cities.map(({ label, value }) => (
+      <SelectItem key={value} value={value}>
+        {label}
+      </SelectItem>
+    ));
+  }, []);
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -412,26 +400,21 @@ export default function SignupPage() {
                   )}
                 </div>
                 {/* This is causing the application to run very slow but why? */}
-                {/* <div className="space-y-2">
+                <div className="space-y-2">
                   <Label htmlFor="city">City</Label>
                   <Select
-                    onValueChange={handleSelectChange}
-                    value={formData.city}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, city: value }))
+                    }
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a City" />
+                      <SelectValue placeholder="Select your city" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectGroup>
-                        {cities.map((city) => (
-                          <SelectItem key={city.value} value={city.value}>
-                            {city.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
+                      <SelectGroup>{cityOptions}</SelectGroup>
                     </SelectContent>
                   </Select>
-                </div> */}
+                </div>
               </>
             )}
 
@@ -578,7 +561,7 @@ export default function SignupPage() {
               className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
               // onClick={() => router.push("/")}
               onClick={handleOTPValidation}
-              disabled={signupLoading || (step === 2 && Boolean(passwordError))} // Disable when loading or if password error exists
+              disabled={signupLoading || (step === 2 && Boolean(passwordError))}
             >
               Complete Signup <ChevronRight />
             </Button>
