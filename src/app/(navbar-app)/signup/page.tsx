@@ -27,7 +27,14 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { ChevronLeft, ChevronRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 // import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
@@ -40,6 +47,16 @@ export default function SignupPage() {
   const [emailValid, setEmailValid] = useState<boolean>(true);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [signupLoading, setSignupLoading] = useState(false);
+  // otp
+  const [otpCooldown, setotpCooldown] = useState(10);
+  const [isResending, setIsResending] = useState(false);
+
+  useEffect(() => {
+    if (otpCooldown > 0) {
+      const timer = setTimeout(() => setotpCooldown(otpCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpCooldown]);
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -273,6 +290,24 @@ export default function SignupPage() {
     ));
   }, []);
 
+  const handleResendOTP = async () => {
+    try {
+      setIsResending(true);
+      const res = await fetch(baseURL + "/resend_otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      setotpCooldown(120); // Reset cooldown after resending
+      const data = await res.json();
+      console.log("Data=>", data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="mx-auto w-full max-w-md">
@@ -322,7 +357,7 @@ export default function SignupPage() {
         <CardContent>
           <div className="space-y-4">
             {/* Step 1: Basic Info */}
-            {step === 1 && (
+            {step === 3 && (
               <>
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First Name</Label>
@@ -513,6 +548,30 @@ export default function SignupPage() {
                       </InputOTPGroup>
                     </InputOTPGroup>
                   </InputOTP>
+
+                  <div className="mt-4 flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs flex items-center gap-1.5 h-8"
+                      onClick={handleResendOTP}
+                      disabled={otpCooldown > 0 || isResending}
+                    >
+                      {isResending ? (
+                        <RefreshCw className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3 w-3" />
+                      )}
+                      {otpCooldown > 0
+                        ? `Resend code (${Math.floor(otpCooldown / 60)}:${(
+                            otpCooldown % 60
+                          )
+                            .toString()
+                            .padStart(2, "0")})`
+                        : "Resend Code"}
+                    </Button>
+                  </div>
                 </div>
               </>
             )}
