@@ -1,7 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -10,56 +9,28 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { baseURL, cities } from "@/lib/utils";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  EyeOff,
-  Loader2,
-  RefreshCw,
-} from "lucide-react";
-// import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { baseURL } from "@/lib/utils";
+import { BasicInfoStep } from "@/components/signup/StepOne";
+import { PasswordStep } from "@/components/signup/StepTwo";
+import { OTPVerificationStep } from "@/components/signup/StepThree";
 
 export default function SignupPage() {
-  // const router = useRouter();
-  // Set and show password states
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordError, setPasswordError] = useState<string>("");
-  const [emailError, setEmailError] = useState<string>("");
-  const [emailValid, setEmailValid] = useState<boolean>(true);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [signupLoading, setSignupLoading] = useState(false);
-  // otp
-  const [otpCooldown, setotpCooldown] = useState(10);
-  const [isResending, setIsResending] = useState(false);
-
-  useEffect(() => {
-    if (otpCooldown > 0) {
-      const timer = setTimeout(() => setotpCooldown(otpCooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [otpCooldown]);
+  type FormDataType = {
+    firstName: string;
+    lastName: string;
+    email: string;
+    companyName: string;
+    city: string;
+    password: string;
+    confirmPassword: string;
+    otp: string;
+  };
 
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [signupLoading, setSignupLoading] = useState(false);
+  const [formData, setFormData] = useState<FormDataType>({
     firstName: "",
     lastName: "",
     email: "",
@@ -69,69 +40,12 @@ export default function SignupPage() {
     confirmPassword: "",
     otp: "",
   });
+  const [formErrors, setFormErrors] = useState({});
+  const [emailValid, setEmailValid] = useState(true);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
-  // Debounce function to limit API calls
-  const useDebounce = (value: string, delay: number) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-
-    return debouncedValue;
-  };
-
-  const debouncedEmail = useDebounce(formData.email, 500);
-
-  const checkEmailExists = useCallback(
-    async (isBlurEvent = false) => {
-      // If it's a blur event, we want to check immediately if the email is valid
-      const emailToCheck = isBlurEvent ? formData.email : debouncedEmail;
-
-      if (!emailToCheck || !validateEmail(emailToCheck)) return;
-
-      try {
-        const res = await fetch(baseURL + "/validate_email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: emailToCheck }),
-        });
-
-        const data = await res.json();
-
-        if (data.message === "Email already registered.") {
-          setEmailError("Email already registered");
-        } else {
-          setEmailError("");
-        }
-      } catch (error) {
-        console.error("Error checking email:", error);
-      }
-    },
-    [debouncedEmail, formData.email]
-  );
-
-  // Check email when debounced value changes
-  useEffect(() => {
-    if (debouncedEmail && debouncedEmail.includes("@")) {
-      checkEmailExists();
-    }
-  }, [debouncedEmail, checkEmailExists]);
-
-  // Email validation function
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Check if all required fields in the current step are filled
-  const isStepValid = useMemo(() => {
+  const isStepValid = () => {
     if (step === 1) {
       return (
         formData.firstName.trim() !== "" &&
@@ -144,120 +58,34 @@ export default function SignupPage() {
       );
     }
     return true;
-  }, [formData, step, emailValid, emailError]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-
-    // Clear error for this field when user starts typing
-    setFormErrors((prev) => ({
-      ...prev,
-      [id]: "",
-    }));
-
-    setFormData((prevState) => ({
-      ...prevState,
-      [id]: value,
-    }));
-
-    // Validate email as user types
-    if (id === "email") {
-      const isValid = validateEmail(value);
-      setEmailValid(isValid);
-      if (!isValid && value.trim() !== "") {
-        setFormErrors((prev) => ({
-          ...prev,
-          email: "Please enter a valid email address",
-        }));
-      }
-    }
-
-    // Only check password match when both fields have values and one of them changes
-    if (
-      (id === "password" || id === "confirmPassword") &&
-      formData.password &&
-      formData.confirmPassword
-    ) {
-      // Use a setTimeout to defer the validation until after the state update
-      setTimeout(() => {
-        const updatedFormData = {
-          ...formData,
-          [id]: value,
-        };
-
-        setPasswordError(
-          updatedFormData.password !== updatedFormData.confirmPassword
-            ? "Passwords do not match!"
-            : ""
-        );
-      }, 0);
-    }
   };
 
-  const handleRegisteration = async () => {
+  const handleRegistration = async () => {
     setSignupLoading(true);
     try {
       const res = await fetch(baseURL + "/register_user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          firstName: "hasanai1",
-          lastName: ":",
-          // abc@example.com
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
-          companyName: formData.password,
+          companyName: formData.companyName,
           city: formData.city,
-          // city: "Karachi",
         }),
       });
-
       const data = await res.json();
       console.log("response=>", data);
-
       setStep(step + 1);
-
-      // if ((data.response.success = "true")) {
-      //   console.log("Yippie");
-      // }
     } catch (error) {
       console.error(error);
-      // const errorMessage =
-      // error instanceof Error ? error.message : "Something went wrong!";
     } finally {
       setSignupLoading(false);
     }
   };
 
-  // Check if email exists method
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-
-    if (value.trim() === "") {
-      setFormErrors((prev) => ({
-        ...prev,
-        [id]: "This field is required",
-      }));
-    }
-
-    if (id === "email" && value.trim() !== "") {
-      if (!validateEmail(value)) {
-        setFormErrors((prev) => ({
-          ...prev,
-          email: "Please enter a valid email address",
-        }));
-        setEmailValid(false);
-      } else {
-        setEmailValid(true);
-        // Check if email exists on blur
-        checkEmailExists(true);
-      }
-    }
-  };
-
   const handleOTPValidation = async () => {
-    console.log("otp ==>>, ", formData.otp);
     try {
       const res = await fetch(baseURL + "/verify_user_otp", {
         method: "POST",
@@ -273,40 +101,11 @@ export default function SignupPage() {
   };
 
   const nextStep = () => {
-    console.log(`step ${step}`, formData);
     if (step === 2 && passwordError) return;
     setStep(step + 1);
   };
 
-  const prevStep = () => {
-    setStep(step - 1);
-  };
-
-  const cityOptions = useMemo(() => {
-    return cities.map(({ label, value }) => (
-      <SelectItem key={value} value={value}>
-        {label}
-      </SelectItem>
-    ));
-  }, []);
-
-  const handleResendOTP = async () => {
-    try {
-      setIsResending(true);
-      const res = await fetch(baseURL + "/resend_otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email }),
-      });
-      setotpCooldown(120); // Reset cooldown after resending
-      const data = await res.json();
-      console.log("Data=>", data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsResending(false);
-    }
-  };
+  const prevStep = () => setStep(step - 1);
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -316,15 +115,12 @@ export default function SignupPage() {
             Sign Up
           </CardTitle>
           <CardDescription className="text-center">
-            Let&apos;s get you started!{" "}
             {step === 1
               ? "Enter your details below."
               : step === 2
               ? "Create your account."
               : "Verify your email."}
           </CardDescription>
-
-          {/* Progress Indicator */}
           <div className="flex justify-center mt-4">
             <div className="flex items-center space-x-2">
               {[1, 2, 3].map((stepNumber) => (
@@ -353,227 +149,31 @@ export default function SignupPage() {
           </div>
         </CardHeader>
 
-        {/* <form onSubmit={handleSubmit}> */}
         <CardContent>
           <div className="space-y-4">
-            {/* Step 1: Basic Info */}
-            {step === 3 && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    className={formErrors.firstName ? "border-red-500" : ""}
-                    required
-                  />
-                  {formErrors.firstName && (
-                    <p className="text-red-500 text-sm">
-                      {formErrors.firstName}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    className={formErrors.lastName ? "border-red-500" : ""}
-                    required
-                  />
-                  {formErrors.lastName && (
-                    <p className="text-red-500 text-sm">
-                      {formErrors.lastName}
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="m@example.com"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    className={
-                      formErrors.email || emailError ? "border-red-500" : ""
-                    }
-                    required
-                  />
-                  {emailError && (
-                    <p className="text-red-500 text-sm">{emailError}</p>
-                  )}
-                  {formErrors.email && (
-                    <p className="text-red-500 text-sm">{formErrors.email}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="companyName">Company Name</Label>
-                  <Input
-                    id="companyName"
-                    type="text"
-                    placeholder="Your Company"
-                    value={formData.companyName}
-                    onChange={handleInputChange}
-                    onBlur={handleBlur}
-                    className={formErrors.companyName ? "border-red-500" : ""}
-                    required
-                  />
-                  {formErrors.companyName && (
-                    <p className="text-red-500 text-sm">
-                      {formErrors.companyName}
-                    </p>
-                  )}
-                </div>
-                {/* This is causing the application to run very slow but why? */}
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, city: value }))
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select your city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>{cityOptions}</SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
+            {step === 1 && (
+              <BasicInfoStep
+                {...{
+                  formData,
+                  setFormData,
+                  formErrors,
+                  setFormErrors,
+                  emailError,
+                  setEmailError,
+                  emailValid,
+                  setEmailValid,
+                }}
+              />
             )}
-
-            {/* Step 2: Account Information */}
             {step === 2 && (
-              <>
-                <div className="relative space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black"
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                </div>
-                <div className="relative space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={formData.confirmPassword}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-black"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff size={20} />
-                      ) : (
-                        <Eye size={20} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                {passwordError && (
-                  <p className="text-red-500 text-sm">{passwordError}</p>
-                )}
-              </>
+              <PasswordStep
+                {...{ formData, setFormData, passwordError, setPasswordError }}
+              />
             )}
-
-            {/* Step 3: OTP Verification */}
             {step === 3 && (
-              <>
-                <div className="text-center mb-4">
-                  <p className="text-sm text-muted-foreground">
-                    We&apos;ve sent a verification code to your email address.
-                    Please enter the code below to complete your registration.
-                  </p>
-                </div>
-                <div className="space-y-2 flex flex-col items-center">
-                  <Label htmlFor="otp">Verification Code</Label>
-                  <InputOTP
-                    maxLength={6}
-                    value={formData.otp}
-                    onChange={(value) =>
-                      setFormData({ ...formData, otp: value })
-                    }
-                  >
-                    <InputOTPGroup className="space-x-4 m-4">
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                      </InputOTPGroup>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={1} />
-                      </InputOTPGroup>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={2} />
-                      </InputOTPGroup>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={3} />
-                      </InputOTPGroup>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={4} />
-                      </InputOTPGroup>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTPGroup>
-                  </InputOTP>
-
-                  <div className="mt-4 flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs flex items-center gap-1.5 h-8"
-                      onClick={handleResendOTP}
-                      disabled={otpCooldown > 0 || isResending}
-                    >
-                      {isResending ? (
-                        <RefreshCw className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <RefreshCw className="h-3 w-3" />
-                      )}
-                      {otpCooldown > 0
-                        ? `Resend code (${Math.floor(otpCooldown / 60)}:${(
-                            otpCooldown % 60
-                          )
-                            .toString()
-                            .padStart(2, "0")})`
-                        : "Resend Code"}
-                    </Button>
-                  </div>
-                </div>
-              </>
+              <OTPVerificationStep
+                {...{ formData, setFormData, email: formData.email }}
+              />
             )}
           </div>
         </CardContent>
@@ -584,8 +184,7 @@ export default function SignupPage() {
               type="button"
               variant="outline"
               onClick={prevStep}
-              className="cursor-pointer mt-4"
-              disabled={signupLoading} // Disable when loading
+              disabled={signupLoading}
             >
               <ChevronLeft /> Back
             </Button>
@@ -593,40 +192,24 @@ export default function SignupPage() {
           {step < 3 ? (
             <Button
               type="button"
-              className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
-              onClick={() => {
-                if (step === 2) {
-                  handleRegisteration();
-                } else {
-                  nextStep();
-                }
-              }}
-              disabled={signupLoading || (step === 1 && !isStepValid)} // Disable when loading or form is invalid
+              onClick={() => (step === 2 ? handleRegistration() : nextStep())}
+              disabled={signupLoading || (step === 1 && !isStepValid())}
             >
               {signupLoading ? (
-                <>
-                  <Loader2 className="animate-spin mr-2" size={20} />
-                  Next <ChevronRight />
-                </>
-              ) : (
-                <>
-                  Next <ChevronRight />
-                </>
-              )}
+                <Loader2 className="animate-spin mr-2" size={20} />
+              ) : null}
+              Next <ChevronRight />
             </Button>
           ) : (
             <Button
               type="submit"
-              className={`${step > 1 ? "" : "w-full"} cursor-pointer mt-4`}
-              // onClick={() => router.push("/")}
               onClick={handleOTPValidation}
-              disabled={signupLoading || (step === 2 && Boolean(passwordError))}
+              disabled={signupLoading}
             >
               Complete Signup <ChevronRight />
             </Button>
           )}
         </CardFooter>
-        {/* </form> */}
       </Card>
     </div>
   );
