@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import {
@@ -13,9 +13,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { baseURL } from "@/lib/utils";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +30,13 @@ export default function LoginPage() {
   });
 
   const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      router.push("/");
+    }
+  }, [router]);
 
   // Email Validation
   const isValidEmail = (email: string) => {
@@ -83,6 +90,10 @@ export default function LoginPage() {
       }
 
       toast.success("Login successful! Redirecting...");
+
+      const responseData = await res.json();
+      const authToken = responseData?.data?.token;
+      localStorage.setItem("authToken", authToken);
 
       setTimeout(() => {
         router.push("/");
