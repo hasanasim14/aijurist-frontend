@@ -1,293 +1,3 @@
-// "use client";
-
-// import type * as React from "react";
-// import {
-//   MessageSquarePlus,
-//   User,
-//   UserRound,
-//   LogOut,
-//   Settings,
-//   CircleHelp,
-//   ShieldCheck,
-//   FileText,
-//   MoreVertical,
-//   Edit,
-//   Trash2,
-// } from "lucide-react";
-// import {
-//   Sidebar,
-//   SidebarContent,
-//   SidebarFooter,
-//   SidebarGroup,
-//   SidebarGroupContent,
-//   SidebarMenu,
-//   SidebarMenuItem,
-//   SidebarRail,
-//   SidebarTrigger,
-//   useSidebar,
-// } from "@/components/ui/sidebar";
-// import {
-//   Popover,
-//   PopoverTrigger,
-//   PopoverContent,
-// } from "@/components/ui/popover";
-// import { Button } from "@/components/ui/button";
-// import Link from "next/link";
-// import { cn, sampleHistory } from "@/lib/utils";
-
-// export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-//   const { state } = useSidebar();
-//   const isCollapsed = state === "collapsed";
-
-//   return (
-//     <Sidebar collapsible="icon" {...props}>
-//       <SidebarContent>
-//         {/* Main Navigation */}
-//         <SidebarGroup>
-//           <SidebarGroupContent>
-//             <SidebarMenu>
-//               <div
-//                 className={cn(
-//                   "transition-all duration-200",
-//                   isCollapsed
-//                     ? "flex flex-col gap-2"
-//                     : "flex flex-row items-center gap-2"
-//                 )}
-//               >
-//                 <SidebarMenuItem>
-//                   <SidebarMenuButton asChild tooltip="Toggle Sidebar">
-//                     <span className="flex items-center">
-//                       <SidebarTrigger
-//                         className={cn(
-//                           "h-auto w-auto",
-//                           isCollapsed ? "mx-auto" : "mr-2"
-//                         )}
-//                       />
-//                     </span>
-//                   </SidebarMenuButton>
-//                 </SidebarMenuItem>
-
-//                 <SidebarMenuItem>
-//                   <SidebarMenuButton asChild tooltip="New Chat">
-//                     <a href="#" className="flex items-center">
-//                       <MessageSquarePlus
-//                         className={cn(
-//                           "shrink-0",
-//                           isCollapsed ? "w-5 h-5 mx-auto" : "w-5 h-5 mr-2"
-//                         )}
-//                       />
-//                       <span className={cn(isCollapsed ? "sr-only" : "block")}>
-//                         New Chat
-//                       </span>
-//                     </a>
-//                   </SidebarMenuButton>
-//                 </SidebarMenuItem>
-//               </div>
-//             </SidebarMenu>
-//           </SidebarGroupContent>
-//         </SidebarGroup>
-
-//         {/* chat history */}
-//         {!isCollapsed && (
-//           <SidebarGroup>
-//             <SidebarGroupContent>
-//               <div className="px-3 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
-//                 Chat History
-//               </div>
-//               <SidebarMenu>
-//                 {sampleHistory.map((chat) => (
-//                   <SidebarMenuItem
-//                     key={chat.id}
-//                     className="flex justify-between items-center"
-//                   >
-//                     <SidebarMenuButton
-//                       asChild
-//                       tooltip={chat.title}
-//                       className="flex-1"
-//                     >
-//                       <div className="truncate">{chat.title}</div>
-//                     </SidebarMenuButton>
-
-//                     {/* Popover Menu for Edit & Delete */}
-//                     <Popover>
-//                       <PopoverTrigger asChild>
-//                         <Button
-//                           variant="ghost"
-//                           size="icon"
-//                           className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-800"
-//                         >
-//                           <MoreVertical className="h-4 w-4" />
-//                         </Button>
-//                       </PopoverTrigger>
-//                       <PopoverContent
-//                         align="end"
-//                         side="right"
-//                         className="w-32 p-1"
-//                       >
-//                         <button className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-//                           <Edit className="h-4 w-4 mr-2" /> Edit
-//                         </button>
-//                         <button className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-//                           <Trash2 className="h-4 w-4 mr-2 text-red-500" />{" "}
-//                           Delete
-//                         </button>
-//                       </PopoverContent>
-//                     </Popover>
-//                   </SidebarMenuItem>
-//                 ))}
-//               </SidebarMenu>
-//             </SidebarGroupContent>
-//           </SidebarGroup>
-//         )}
-//       </SidebarContent>
-
-//       {/* Sidebar Footer with Popover */}
-//       <SidebarFooter className="p-4">
-//         {/* Dotted Line Separator */}
-//         <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-4" />
-
-//         {/* Footer buttons container - row when expanded, column when collapsed */}
-//         <div
-//           className={cn(
-//             "flex gap-3 transition-all duration-200",
-//             isCollapsed ? "flex-col" : "flex-row"
-//           )}
-//         >
-//           {/* Settings Button */}
-//           <Popover>
-//             {/* <PopoverContent asChild> */}
-//             <PopoverTrigger asChild>
-//               <Button
-//                 variant="outline"
-//                 className={cn(
-//                   "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
-//                   isCollapsed
-//                     ? "justify-center p-2.5 h-10 w-full"
-//                     : "justify-start p-2.5 h-10 flex-1"
-//                 )}
-//                 onClick={() => console.log("Settings clicked")}
-//               >
-//                 <Settings className="w-5 h-5 shrink-0" />
-//                 <span
-//                   className={cn(
-//                     "ml-2 text-sm font-medium",
-//                     isCollapsed ? "sr-only" : "block"
-//                   )}
-//                 >
-//                   Settings
-//                 </span>
-//               </Button>
-//               {/* </PopoverContent> */}
-//             </PopoverTrigger>
-//             <PopoverContent align="end" side="right" className="w-50 p-0">
-//               <div className="flex flex-col p-2">
-//                 {/* Help */}
-//                 <Link
-//                   href="/profile"
-//                   className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
-//                 >
-//                   <CircleHelp className="w-4 h-4" />
-//                   <span>Help</span>
-//                 </Link>
-//                 {/* Privacy Policy */}
-//                 <Link
-//                   href="/profile"
-//                   className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
-//                 >
-//                   <ShieldCheck className="w-4 h-4" />
-//                   <span>Privacy Policy</span>
-//                 </Link>
-//                 {/* Terms of use */}
-//                 <Link
-//                   href="/profile"
-//                   className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
-//                 >
-//                   <FileText className="w-4 h-4" />
-//                   <span>Terms of Use</span>
-//                 </Link>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-
-//           {/* Account Button */}
-//           <Popover>
-//             <PopoverTrigger asChild>
-//               <Button
-//                 variant="outline"
-//                 className={cn(
-//                   "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
-//                   isCollapsed
-//                     ? "justify-center p-2.5 h-10 w-full"
-//                     : "justify-start p-2.5 h-10 flex-1"
-//                 )}
-//               >
-//                 <UserRound className="w-5 h-5 shrink-0" />
-//                 <span
-//                   className={cn(
-//                     "ml-2 text-sm font-medium",
-//                     isCollapsed ? "sr-only" : "block"
-//                   )}
-//                 >
-//                   Account
-//                 </span>
-//               </Button>
-//             </PopoverTrigger>
-//             <PopoverContent align="end" side="right" className="w-50 p-0">
-//               <div className="flex flex-col p-2">
-//                 <Link
-//                   href="/profile"
-//                   className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
-//                 >
-//                   <User className="w-4 h-4" />
-//                   <span>Profile</span>
-//                 </Link>
-
-//                 <button
-//                   className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors text-left"
-//                   onClick={() => console.log("Logout clicked")}
-//                 >
-//                   <LogOut className="w-4 h-4" />
-//                   <span>Logout</span>
-//                 </button>
-//               </div>
-//             </PopoverContent>
-//           </Popover>
-//         </div>
-//       </SidebarFooter>
-
-//       <SidebarRail />
-//     </Sidebar>
-//   );
-// }
-
-// function SidebarMenuButton({
-//   children,
-//   className,
-//   asChild,
-//   tooltip,
-//   ...props
-// }: React.ComponentProps<typeof Button> & {
-//   asChild?: boolean;
-//   tooltip?: string;
-// }) {
-//   if (asChild) {
-//     return (
-//       <span className={cn("w-full", className)} {...props}>
-//         {children}
-//       </span>
-//     );
-//   }
-
-//   return (
-//     <Button
-//       variant="ghost"
-//       className={cn("w-full justify-start", className)}
-//       {...props}
-//     >
-//       {children}
-//     </Button>
-//   );
-// }
 "use client";
 
 import { SidebarMenuButton } from "@/components/ui/sidebar";
@@ -325,8 +35,10 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { baseURL, cn, sampleHistory } from "@/lib/utils";
 import Link from "next/link";
-import { cn, sampleHistory } from "@/lib/utils";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
@@ -341,6 +53,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handleMobileTrigger = () => {
     if (isMobile) {
       setOpenMobile(true);
+    }
+  };
+
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    const token = localStorage.getItem("authToken");
+    try {
+      await fetch(baseURL + "/logout_user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: token }),
+      });
+      toast.success("Logged out Successfully!");
+      localStorage.removeItem("authToken");
+      router.push("/login");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Something went wrong!";
+      toast.error(errorMessage);
+      console.error(error);
     }
   };
 
@@ -574,7 +307,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                   <button
                     className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors text-left"
-                    onClick={() => console.log("Logout clicked")}
+                    // onClick={() => console.log("Logout clicked")}
+                    // onClick={() => localStorage.removeItem("authToken")}
+                    onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4" />
                     <span>Logout</span>
