@@ -1,5 +1,3 @@
-// Almost perfect
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,6 +7,16 @@ import Image from "next/image";
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [authToken, setAuthToken] = useState<string>("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setAuthToken(token);
+    }
+  }, []);
+
+  console.log("The authToken is", authToken);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -34,6 +42,9 @@ export function Navbar() {
     { label: "How It Works", href: "/docs" },
     { label: "Plans", href: "/docs" },
     { label: "FAQ", href: "/docs" },
+  ];
+
+  const authItems = [
     { label: "Login", href: "/login" },
     { label: "Signup", href: "/signup" },
   ];
@@ -47,7 +58,7 @@ export function Navbar() {
       >
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           {/* Logo */}
-          <Link href="/" className="z-50 relative">
+          <Link href="/docs" className="z-50 relative">
             <Image
               src="/logo.png"
               alt="Logo"
@@ -59,6 +70,15 @@ export function Navbar() {
 
           {/* Desktop Navigation - hidden on mobile */}
           <nav className="hidden md:flex items-center space-x-8">
+            {authToken && (
+              <Link
+                href="/"
+                className="group/item relative text-lg font-medium text-gray-500 hover:text-black transition-colors"
+              >
+                Go to Chat
+                <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full" />
+              </Link>
+            )}
             {navigationItems.map((item, index) => (
               <Link
                 key={index}
@@ -69,6 +89,17 @@ export function Navbar() {
                 <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full" />
               </Link>
             ))}
+            {!authToken &&
+              authItems.map((item, index) => (
+                <Link
+                  key={`auth-${index}`}
+                  href={item.href}
+                  className="group/item relative text-lg font-medium text-gray-500 hover:text-black transition-colors"
+                >
+                  {item.label}
+                  <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full" />
+                </Link>
+              ))}
           </nav>
 
           {/* Mobile Menu Button with transition */}
@@ -96,36 +127,6 @@ export function Navbar() {
               ></span>
             </div>
           </button>
-
-          {/* Mobile Menu Overlay with enhanced transitions */}
-          <div
-            className={`fixed inset-0 bg-white flex flex-col justify-center transition-all duration-500 ease-in-out ${
-              isMenuOpen
-                ? "opacity-100 visible translate-y-0"
-                : "opacity-0 invisible -translate-y-8"
-            }`}
-          >
-            <div className="container mx-auto px-8 py-20 flex flex-col h-full">
-              <nav className="flex flex-col mt-auto mb-20 space-y-8">
-                {navigationItems.map((item, index) => (
-                  <Link
-                    key={index}
-                    href={item.href}
-                    className={`group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out ${
-                      isMenuOpen
-                        ? "opacity-100 translate-x-0"
-                        : "opacity-0 translate-x-8"
-                    }`}
-                    style={{ transitionDelay: `${index * 100}ms` }}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    {item.label}
-                    <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full"></span>
-                  </Link>
-                ))}
-              </nav>
-            </div>
-          </div>
         </div>
       </header>
 
