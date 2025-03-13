@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardHeader,
@@ -49,6 +49,13 @@ export default function SignupPage() {
   const [passwordValid, setPasswordValid] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      router.push("/");
+    }
+  }, [router]);
+
   const isStepValid = () => {
     if (step === 1) {
       return (
@@ -67,7 +74,7 @@ export default function SignupPage() {
   const handleRegistration = async () => {
     setSignupLoading(true);
     try {
-      const res = await fetch(baseURL + "/register_user", {
+      await fetch(baseURL + "/register_user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -79,7 +86,7 @@ export default function SignupPage() {
           city: formData.city,
         }),
       });
-      console.log("response=>", res);
+
       toast.success("OTP sent succes sfully! Please check your email.");
       setStep(step + 1);
     } catch (error) {
@@ -102,6 +109,11 @@ export default function SignupPage() {
       });
       console.log("verify user otp is ", res);
       toast.success("Account verified successfully! Welcome aboard.");
+
+      const responseData = await res.json();
+      const authToken = responseData?.data?.token;
+      localStorage.setItem("authToken", authToken);
+
       setTimeout(() => {
         router.push("/");
       }, 1000);
