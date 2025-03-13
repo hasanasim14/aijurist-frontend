@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -22,7 +23,7 @@ import {
   Layers,
   Pencil,
 } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const icons = [
   Globe,
@@ -44,6 +45,15 @@ export default function ChatUI() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
 
   useEffect(() => {
     if (chatContainerRef.current) {
