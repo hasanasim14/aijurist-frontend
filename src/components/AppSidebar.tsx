@@ -1,8 +1,7 @@
 "use client";
 
-import { SidebarMenuButton } from "@/components/ui/sidebar";
-
 import type * as React from "react";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
 import {
   MessageSquarePlus,
   User,
@@ -15,6 +14,7 @@ import {
   MoreVertical,
   Edit,
   Trash2,
+  Menu,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,10 +35,11 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { baseURL, cn, sampleHistory } from "@/lib/utils";
+import { baseURL, cn } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
@@ -57,6 +58,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   };
 
   const router = useRouter();
+  const [chatHistory, setChatHistory] = useState<
+    Record<string, { chat_id: number; chat_title: string }[]>
+  >({});
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
@@ -77,6 +81,37 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  useEffect(() => {
+    const fetchChatTitles = async () => {
+      const token = localStorage.getItem("authToken");
+      console.log("token", token);
+      try {
+        const res = await fetch(
+          "https://devlegal.ai-iscp.com/get_chat_titles",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ chat_id: "all" }),
+          }
+        );
+
+        const data = await res.json();
+        setChatHistory(data?.data);
+
+        console.log("response =>", data.data);
+      } catch (error) {
+        console.error("Error fetching chat titles:", error);
+      }
+    };
+
+    fetchChatTitles();
+  }, []);
+
+  console.log("chat hisrot", chatHistory);
+
   return (
     <>
       {/* Mobile trigger button that's always visible on small screens */}
@@ -87,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           className="fixed top-4 left-4 z-50 md:hidden"
           onClick={handleMobileTrigger}
         >
-          <MessageSquarePlus className="h-5 w-5" />
+          <Menu className="h-5 w-5" />
           <span className="sr-only">Open Menu</span>
         </Button>
       )}
@@ -142,53 +177,72 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           {/* chat history */}
           {(!isCollapsed || isMobile) && (
             <SidebarGroup>
-              <SidebarGroupContent>
+              <SidebarGroupContent className="max-h-[calc(100vh-220px)] overflow-y-auto">
                 <div className="px-3 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
                   Chat History
                 </div>
                 <SidebarMenu
                   className={cn(isMobile ? "space-y-1" : "space-y-2")}
                 >
-                  {sampleHistory.map((chat) => (
-                    <SidebarMenuItem
-                      key={chat.id}
-                      className="flex justify-between items-center"
-                    >
-                      <SidebarMenuButton
-                        asChild
-                        tooltip={chat.title}
-                        className={cn("flex-1", isMobile ? "py-1.5" : "py-2")}
-                      >
-                        <div className="truncate">{chat.title}</div>
-                      </SidebarMenuButton>
+                  {chatHistory &&
+                    Object.entries(chatHistory)
+                      .filter(([, chats]) => chats.length > 0) // Filter out empty sections
+                      .map(([section, chats]) => (
+                        <div key={section}>
+                          {/* Section Header */}
+                          <div className="sticky top-0 px-3 py-1 text-xs font-medium text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-950 z-10">
+                            {section}
+                          </div>
 
-                      {/* Popover Menu for Edit & Delete */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-800"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent
-                          align="end"
-                          side="right"
-                          className="w-32 p-1"
-                        >
-                          <button className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                            <Edit className="h-4 w-4 mr-2" /> Edit
-                          </button>
-                          <button className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                            <Trash2 className="h-4 w-4 mr-2 text-red-500" />{" "}
-                            Delete
-                          </button>
-                        </PopoverContent>
-                      </Popover>
-                    </SidebarMenuItem>
-                  ))}
+                          {/* Chat Items */}
+                          {chats.map((chat) => (
+                            <SidebarMenuItem
+                              key={chat.chat_id}
+                              className="flex justify-between items-center"
+                            >
+                              {/* Chat Title */}
+                              <SidebarMenuButton
+                                asChild
+                                tooltip={chat.chat_title}
+                                className={cn(
+                                  "flex-1",
+                                  isMobile ? "py-1.5" : "py-2"
+                                )}
+                              >
+                                <div className="truncate">
+                                  {chat.chat_title}
+                                </div>
+                              </SidebarMenuButton>
+
+                              {/* Popover Menu for Edit & Delete */}
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-800"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent
+                                  align="end"
+                                  side="right"
+                                  className="w-32 p-1"
+                                >
+                                  <button className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                    <Edit className="h-4 w-4 mr-2" /> Rename
+                                  </button>
+                                  <button className="flex text-red-500 items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                    <Trash2 className="h-4 w-4 mr-2 text-red-500" />{" "}
+                                    Delete
+                                  </button>
+                                </PopoverContent>
+                              </Popover>
+                            </SidebarMenuItem>
+                          ))}
+                        </div>
+                      ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -307,8 +361,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
                   <button
                     className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors text-left"
-                    // onClick={() => console.log("Logout clicked")}
-                    // onClick={() => localStorage.removeItem("authToken")}
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4" />
@@ -332,7 +384,7 @@ export function SidebarWrapper({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex min-h-screen">
         <AppSidebar />
-        <div className="flex-1 p-4">{children}</div>
+        <div className="flex-1 p-4 pt-12">{children}</div>
       </div>
     </SidebarProvider>
   );
