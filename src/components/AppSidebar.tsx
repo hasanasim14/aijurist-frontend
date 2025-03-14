@@ -40,6 +40,7 @@ import Link from "next/link";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
@@ -61,6 +62,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [chatHistory, setChatHistory] = useState<
     Record<string, { chat_id: number; chat_title: string }[]>
   >({});
+  const [chatToDelete, setChatToDelete] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
+  const [chatToEdit, setChatToEdit] = useState<{
+    id: number;
+    title: string;
+  } | null>(null);
+  const [newChatTitle, setNewChatTitle] = useState("");
+  const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
@@ -76,6 +87,84 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Something went wrong!";
+      toast.error(errorMessage);
+      console.error(error);
+    }
+  };
+
+  const handleDeleteChat = async () => {
+    if (!chatToDelete) return;
+
+    const token = localStorage.getItem("authToken");
+    try {
+      // Replace with your actual delete API endpoint
+      await fetch(baseURL + "/delete_chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ chat_id: chatToDelete.id }),
+      });
+
+      // Update local state to remove the deleted chat
+      setChatHistory((prev) => {
+        const newHistory = { ...prev };
+        Object.keys(newHistory).forEach((section) => {
+          newHistory[section] = newHistory[section].filter(
+            (chat) => chat.chat_id !== chatToDelete.id
+          );
+        });
+        return newHistory;
+      });
+
+      toast.success("Chat deleted successfully!");
+      setChatToDelete(null);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete chat";
+      toast.error(errorMessage);
+      console.error(error);
+    }
+  };
+
+  const handleEditChat = async () => {
+    if (!chatToEdit || !newChatTitle.trim()) return;
+
+    const token = localStorage.getItem("authToken");
+    try {
+      // Replace with your actual rename API endpoint
+      await fetch(baseURL + "/rename_chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          chat_id: chatToEdit.id,
+          new_title: newChatTitle.trim(),
+        }),
+      });
+
+      // Update local state with the new chat title
+      setChatHistory((prev) => {
+        const newHistory = { ...prev };
+        Object.keys(newHistory).forEach((section) => {
+          newHistory[section] = newHistory[section].map((chat) =>
+            chat.chat_id === chatToEdit.id
+              ? { ...chat, chat_title: newChatTitle.trim() }
+              : chat
+          );
+        });
+        return newHistory;
+      });
+
+      toast.success("Chat renamed successfully!");
+      setChatToEdit(null);
+      setNewChatTitle("");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to rename chat";
       toast.error(errorMessage);
       console.error(error);
     }
@@ -109,6 +198,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     fetchChatTitles();
   }, []);
+
+  // Set the new chat title when a chat is selected for editing
+  useEffect(() => {
+    if (chatToEdit) {
+      setNewChatTitle(chatToEdit.title);
+    }
+  }, [chatToEdit]);
 
   console.log("chat hisrot", chatHistory);
 
@@ -215,7 +311,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                               </SidebarMenuButton>
 
                               {/* Popover Menu for Edit & Delete */}
-                              <Popover>
+                              <Popover
+                                open={openPopoverId === chat.chat_id}
+                                onOpenChange={(open) => {
+                                  setOpenPopoverId(open ? chat.chat_id : null);
+                                }}
+                              >
                                 <PopoverTrigger asChild>
                                   <Button
                                     variant="ghost"
@@ -230,10 +331,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   side="right"
                                   className="w-32 p-1"
                                 >
-                                  <button className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                  <button
+                                    className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                    onClick={() => {
+                                      setChatToEdit({
+                                        id: chat.chat_id,
+                                        title: chat.chat_title,
+                                      });
+                                      setOpenPopoverId(null); // Close the popover when edit is clicked
+                                    }}
+                                  >
                                     <Edit className="h-4 w-4 mr-2" /> Rename
                                   </button>
-                                  <button className="flex text-red-500 items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                                  <button
+                                    className="flex text-red-500 items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                    onClick={() => {
+                                      setChatToDelete({
+                                        id: chat.chat_id,
+                                        title: chat.chat_title,
+                                      });
+                                      setOpenPopoverId(null); // Close the popover when delete is clicked
+                                    }}
+                                  >
                                     <Trash2 className="h-4 w-4 mr-2 text-red-500" />{" "}
                                     Delete
                                   </button>
@@ -374,6 +493,69 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         <SidebarRail />
       </Sidebar>
+
+      {/* Delete Confirmation Modal */}
+      {chatToDelete && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Delete Chat</h3>
+            <p className="mb-6">
+              Are you sure you want to delete "{chatToDelete.title}"? This
+              action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setChatToDelete(null)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDeleteChat}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Chat Modal */}
+      {chatToEdit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Rename Chat</h3>
+            <div className="mb-6">
+              <label
+                htmlFor="chat-title"
+                className="block text-sm font-medium mb-2"
+              >
+                New Title
+              </label>
+              <Input
+                id="chat-title"
+                value={newChatTitle}
+                onChange={(e) => setNewChatTitle(e.target.value)}
+                placeholder="Enter new chat title"
+                className="w-full"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newChatTitle.trim()) {
+                    handleEditChat();
+                  }
+                }}
+              />
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setChatToEdit(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                onClick={handleEditChat}
+                disabled={!newChatTitle.trim()}
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
