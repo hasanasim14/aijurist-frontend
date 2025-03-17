@@ -10,6 +10,7 @@ interface ChatSectionProps {
 
 const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const { selectedChatId } = useChatContext();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [pastChat, setPastChat] = useState<any[]>([]);
 
   useEffect(() => {

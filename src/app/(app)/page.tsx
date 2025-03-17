@@ -27,6 +27,7 @@ import NotificationBar from "@/components/NotificationBar";
 import ChatSection from "@/components/chat/ChatSection";
 import { Card, CardContent } from "@/components/ui/card";
 import { useChatContext } from "@/context/ChatContext";
+import { User } from "@/lib/utils";
 
 const icons = [
   Globe,
@@ -46,6 +47,7 @@ export default function ChatUI() {
   const [input, setInput] = useState("");
   const [showHeading, setShowHeading] = useState(true);
   const [hasChatData, setHasChatData] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -94,9 +96,12 @@ export default function ChatUI() {
     }
   };
 
-  const wow = sessionStorage.getItem("user");
-  const user = wow ? JSON.parse(wow) : null;
-  console.log("BRainrot = ", user);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userData = sessionStorage.getItem("user");
+      setUser(userData ? JSON.parse(userData) : null);
+    }
+  }, []);
 
   const sendMessage = () => {
     if (!input.trim()) return;

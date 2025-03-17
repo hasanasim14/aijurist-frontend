@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import Link from "next/link";
 
 const NotificationBar = () => {
   const [visible, setVisible] = useState(true);
@@ -19,9 +20,12 @@ const NotificationBar = () => {
       <div className="flex items-center justify-center relative">
         <div className="text-sm font-medium text-foreground">
           Free Plan Active -{" "}
-          <a href="/#" className="underline text-primary hover:text-primary/80">
+          <Link
+            href="/#"
+            className="underline text-primary hover:text-primary/80"
+          >
             Upgrade Plan Now
-          </a>
+          </Link>
         </div>
         <button
           onClick={handleClose}

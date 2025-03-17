@@ -76,3 +76,12 @@ export const cities = [
 ];
 
 export const baseURL = "http://192.168.1.10:9630";
+
+export interface User {
+  city: string;
+  companyName: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  session_id: string;
+}
