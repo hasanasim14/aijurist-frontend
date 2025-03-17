@@ -139,10 +139,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const handleEditChat = async () => {
     if (!chatToEdit || !newChatTitle.trim()) return;
 
+    console.log("The chat id I am deleting is=>>", chatToEdit?.id);
+
     const token = localStorage.getItem("authToken");
     try {
       // Replace with your actual rename API endpoint
-      await fetch(baseURL + "/rename_chat", {
+      await fetch("https://devlegal.ai-iscp.com/rename_chat_title", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -150,7 +152,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         body: JSON.stringify({
           chat_id: chatToEdit.id,
-          new_title: newChatTitle.trim(),
+          renamed_title: newChatTitle.trim(),
         }),
       });
 
