@@ -127,12 +127,3 @@
     font-family: "Poppins", sans-serif;
   }
 }
-
-.larger-icons {
-  width: 30px !important;
-  height: auto !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-}
