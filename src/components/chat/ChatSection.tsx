@@ -4,9 +4,13 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useChatContext } from "@/context/ChatContext";
 
-const ChatSection = () => {
+interface ChatSectionProps {
+  onChatDataChange?: (hasChatData: boolean) => void;
+}
+
+const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const { selectedChatId } = useChatContext();
-  const [pastChat, setPastChat] = useState<any[]>();
+  const [pastChat, setPastChat] = useState<any[]>([]);
 
   useEffect(() => {
     console.log("the context api is", selectedChatId);
@@ -24,14 +28,30 @@ const ChatSection = () => {
         });
         const data = await res.json();
         console.log("Chat data=>", data.data);
-        setPastChat(data.data);
+        setPastChat(data.data || []);
+
+        // Notify parent component about chat data status
+        if (onChatDataChange) {
+          onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
+        }
       } catch (error) {
         console.error("Error fetching chat", error);
+        setPastChat([]);
+        if (onChatDataChange) {
+          onChatDataChange(false);
+        }
       }
     };
 
-    pastChats();
-  }, [selectedChatId]);
+    if (selectedChatId) {
+      pastChats();
+    } else {
+      setPastChat([]);
+      if (onChatDataChange) {
+        onChatDataChange(false);
+      }
+    }
+  }, [selectedChatId, onChatDataChange]);
 
   console.log("the context api is", selectedChatId);
 
@@ -39,9 +59,9 @@ const ChatSection = () => {
     <>
       {Array.isArray(pastChat) && pastChat.length > 0 ? (
         pastChat.map((chat, index) => (
-          <div key={index} className="flex flex-col space-y-2">
+          <div key={index} className="flex flex-col space-y-4">
             {/* User query */}
-            <div className="p-4 my-2 rounded-lg max-w-2xl bg-[#e0e0e0] text-black self-end ml-10">
+            <div className="p-4 my-4 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
               {typeof chat?.user_query === "object"
                 ? Object.values(chat?.user_query)[0]
                 : chat?.user_query}
@@ -50,7 +70,7 @@ const ChatSection = () => {
             {/* Chatbot response */}
             <div className="flex items-start space-x-2 self-start mr-10">
               {/* White Circle with Logo */}
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
                 <Image
                   src="/logo-small.png"
                   width={20}
@@ -60,7 +80,7 @@ const ChatSection = () => {
               </div>
 
               {/* Response Text */}
-              <div className="p-4 rounded-lg max-w-2xl bg-[#D8D8D8] text-black">
+              <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200">
                 {typeof chat.llm_response === "object"
                   ? Object.values(chat?.llm_response)[0]
                   : chat?.llm_response}
@@ -69,7 +89,7 @@ const ChatSection = () => {
           </div>
         ))
       ) : (
-        <p className="text-center text-gray-500">No past chats found.</p>
+        <p className="text-center text-gray-500"> </p>
       )}
     </>
   );

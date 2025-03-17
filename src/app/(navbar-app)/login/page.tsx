@@ -92,8 +92,13 @@ export default function LoginPage() {
       toast.success("Login successful! Redirecting...");
 
       const responseData = await res.json();
+      console.log("responseDaata inside =>", responseData?.data?.token_payload);
       const authToken = responseData?.data?.token;
       localStorage.setItem("authToken", authToken);
+      sessionStorage.setItem(
+        "user",
+        JSON.stringify(responseData?.data?.token_payload)
+      );
 
       setTimeout(() => {
         router.push("/");

@@ -16,7 +16,7 @@ import {
   Trash2,
   Menu,
   AlertTriangle,
-  MenuSquare,
+  // MenuSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,7 +27,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarRail,
-  SidebarTrigger,
+  // SidebarTrigger,
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -223,9 +223,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {/* Mobile trigger button that's always visible on small screens */}
       {isMobile && (
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-50 md:hidden"
+          className="fixed top-8 left-4 z-50 md:hidden rounded-2xl"
           onClick={handleMobileTrigger}
         >
           <Menu className="h-5 w-5" />
@@ -261,7 +261,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       onClick={toggleSidebar}
                     >
                       <Menu className="w-5 h-5" />
-                      {/* <SidebarTrigger /> */}
                     </Button>
                   </SidebarMenuItem>
 
@@ -550,9 +549,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
             {/* Description */}
             <p className="mb-6 text-center">
-              Are you sure you want to delete the chat"
+              Are you sure you want to delete the chat &quot;
               <br />
-              <span className="font-bold">{chatToDelete.title} ?"</span>
+              <span className="font-bold">{chatToDelete.title} ?&quot;</span>
               <br />
               This action cannot be undone.
             </p>
