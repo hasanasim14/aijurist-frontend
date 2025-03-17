@@ -75,12 +75,4 @@ export const cities = [
   { label: "Wazirabad", value: "wazirabad" },
 ];
 
-export const sampleHistory = [
-  { id: 1, title: "Icon Suggestions for Popover", date: "today" },
-  { id: 2, title: "Sidebar rendering issue fix", date: "previous" },
-  { id: 3, title: "Chat Layout Background Change", date: "previous" },
-  { id: 4, title: "ESLint Apostrophe Fix", date: "previous" },
-  { id: 5, title: "ChatGPT UI in Next.js", date: "previous" },
-];
-
 export const baseURL = "http://192.168.1.10:9630";

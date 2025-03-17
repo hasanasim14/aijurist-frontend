@@ -15,6 +15,8 @@ import {
   Edit,
   Trash2,
   Menu,
+  AlertTriangle,
+  MenuSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -41,6 +43,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useChatContext } from "@/context/ChatContext";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
@@ -48,6 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     isMobile,
     // , openMobile,
     setOpenMobile,
+    toggleSidebar,
   } = useSidebar();
   const isCollapsed = state === "collapsed";
 
@@ -72,6 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
+  const { setSelectedChatId } = useChatContext();
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
@@ -92,13 +97,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  // Delete chat functionality
   const handleDeleteChat = async () => {
     if (!chatToDelete) return;
+
+    console.log("The chat id I am deleting is=>>", chatToDelete?.id);
 
     const token = localStorage.getItem("authToken");
     try {
       // Replace with your actual delete API endpoint
-      await fetch(baseURL + "/delete_chat", {
+      await fetch("https://devlegal.ai-iscp.com/delete_chat_update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -233,42 +241,80 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className={cn(
                     "transition-all duration-200",
                     isCollapsed
-                      ? "flex flex-col gap-2"
-                      : "flex flex-row items-center gap-2"
+                      ? "flex flex-col gap-3"
+                      : "flex flex-row items-center gap-3"
                   )}
                 >
+                  {/* <SidebarMenuItem>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
+                        isCollapsed
+                          ? "justify-center p-2.5 h-10 w-full"
+                          : "justify-start p-2.5 h-10 flex-1",
+                        isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
+                      )}
+                      onClick={toggleSidebar}
+                    >
+                      <SidebarTrigger className="h-auto w-auto border-none" />
+                      <span
+                        className={cn(
+                          "ml-2 text-sm font-medium",
+                          isCollapsed ? "sr-only" : "block"
+                        )}
+                      ></span>
+                    </Button>
+                  </SidebarMenuItem> */}
+
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="Toggle Sidebar">
-                      <span className="flex items-center">
-                        <SidebarTrigger
-                          className={cn(
-                            "h-auto w-auto",
-                            isCollapsed ? "mx-auto" : "mr-2"
-                          )}
-                        />
-                      </span>
-                    </SidebarMenuButton>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center cursor-pointer",
+                        "active:scale-95 active:bg-gray-200 dark:active:bg-gray-800",
+                        isCollapsed
+                          ? "justify-center p-2.5 h-10 w-full"
+                          : "justify-center p-2.5 h-10 flex-1",
+                        isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
+                      )}
+                      onClick={toggleSidebar}
+                    >
+                      <Menu className="w-5 h-5" />
+                      {/* <SidebarTrigger /> */}
+                    </Button>
                   </SidebarMenuItem>
 
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild tooltip="New Chat">
-                      <a href="#" className="flex items-center">
-                        <MessageSquarePlus
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
+                        isCollapsed
+                          ? "justify-center p-2.5 h-10 w-full"
+                          : "justify-start p-2.5 h-10 flex-1",
+                        isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
+                      )}
+                      asChild
+                    >
+                      <Link href="#">
+                        <MessageSquarePlus className="w-5 h-5 shrink-0" />
+                        <span
                           className={cn(
-                            "shrink-0",
-                            isCollapsed ? "w-5 h-5 mx-auto" : "w-5 h-5 mr-2"
+                            "ml-2 text-sm font-medium",
+                            isCollapsed ? "sr-only" : "block"
                           )}
-                        />
-                        <span className={cn(isCollapsed ? "sr-only" : "block")}>
+                        >
                           New Chat
                         </span>
-                      </a>
-                    </SidebarMenuButton>
+                      </Link>
+                    </Button>
                   </SidebarMenuItem>
                 </div>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-1" />
 
           {/* chat history */}
           {(!isCollapsed || isMobile) && (
@@ -301,9 +347,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 asChild
                                 tooltip={chat.chat_title}
                                 className={cn(
-                                  "flex-1",
+                                  "flex-1 cursor-pointer",
                                   isMobile ? "py-1.5" : "py-2"
                                 )}
+                                // onClick()
+                                // onClick={() =>
+                                //   console.log("chat details", chat?.chat_id)
+                                // }
+
+                                onClick={() => setSelectedChatId(chat?.chat_id)}
                               >
                                 <div className="truncate">
                                   {chat.chat_title}
@@ -369,9 +421,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarContent>
 
         {/* Sidebar Footer with Popover */}
-        <SidebarFooter className={cn("p-4", isMobile ? "p-2" : "p-4")}>
+        <SidebarFooter
+          className={cn("px-4 pb-4", isMobile ? "px-2 pb-2" : "px-4 pb-4")}
+        >
+          {/* <SidebarFooter className={cn("px-4 pb-4", isMobile ? "px-2 pb-2" : "px-4 pb-4")} /> */}
+
           {/* Dotted Line Separator */}
-          <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-4" />
+          <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-2" />
 
           {/* Footer buttons container - row when expanded, column when collapsed */}
           <div
@@ -498,17 +554,42 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {chatToDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-medium mb-4">Delete Chat</h3>
-            <p className="mb-6">
-              Are you sure you want to delete "{chatToDelete.title}"? This
-              action cannot be undone.
+            {/* Icon + Text Container */}
+            <div className="flex flex-col items-center mb-4">
+              {/* Centered Alert Icon */}
+              <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
+                <AlertTriangle className="w-8 h-8 text-red-500" />
+              </div>
+              {/* Title */}
+              <h3 className="text-lg font-medium mt-4 text-center">
+                Are you sure?
+              </h3>
+            </div>
+
+            {/* Description */}
+            <p className="mb-6 text-center">
+              Are you sure you want to delete the chat"
+              <br />
+              <span className="font-bold">{chatToDelete.title} ?"</span>
+              <br />
+              This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setChatToDelete(null)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteChat}>
+
+            {/* Buttons */}
+            <div className="flex flex-col space-y-2">
+              <Button
+                variant="destructive"
+                onClick={handleDeleteChat}
+                className="cursor-pointer"
+              >
                 Delete
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setChatToDelete(null)}
+                className="cursor-pointer"
+              >
+                Cancel
               </Button>
             </div>
           </div>

@@ -1,0 +1,28 @@
+"use client";
+
+import { createContext, useContext, useState, ReactNode } from "react";
+
+type ChatContextType = {
+  selectedChatId: number | null;
+  setSelectedChatId: (id: number | null) => void;
+};
+
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+export function ChatProvider({ children }: { children: ReactNode }) {
+  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+
+  return (
+    <ChatContext.Provider value={{ selectedChatId, setSelectedChatId }}>
+      {children}
+    </ChatContext.Provider>
+  );
+}
+
+export function useChatContext() {
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error("useChatContext must be used within a ChatProvider");
+  }
+  return context;
+}

@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { ChatProvider } from "@/context/ChatContext";
 
 export default function AppLayout({
   children,
@@ -7,11 +8,13 @@ export default function AppLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SidebarProvider>
-      <div className="flex flex-1">
-        <AppSidebar />
-        <main className="flex-1 p-4 overflow-auto">{children}</main>
-      </div>
-    </SidebarProvider>
+    <ChatProvider>
+      <SidebarProvider>
+        <div className="flex flex-1">
+          <AppSidebar />
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
+      </SidebarProvider>
+    </ChatProvider>
   );
 }

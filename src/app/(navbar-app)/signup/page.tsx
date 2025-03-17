@@ -107,7 +107,6 @@ export default function SignupPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: formData.email, otp: formData.otp }),
       });
-      console.log("verify user otp is ", res);
       toast.success("Account verified successfully! Welcome aboard.");
 
       const responseData = await res.json();

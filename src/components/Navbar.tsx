@@ -16,8 +16,6 @@ export function Navbar() {
     }
   }, []);
 
-  console.log("The authToken is", authToken);
-
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 10);
@@ -127,6 +125,63 @@ export function Navbar() {
               ></span>
             </div>
           </button>
+
+          {/* Mobile Menu Overlay with enhanced transitions */}
+          <div
+            className={`fixed inset-0 bg-white flex flex-col justify-center transition-all duration-500 ease-in-out ${
+              isMenuOpen
+                ? "opacity-100 visible translate-y-0"
+                : "opacity-0 invisible -translate-y-8"
+            }`}
+          >
+            <div className="container mx-auto px-8 py-20 flex flex-col h-full">
+              <nav className="flex flex-col mt-auto mb-20 space-y-8">
+                {/* Go to Chat Link for Authenticated Users */}
+                {authToken && (
+                  <Link
+                    href="/"
+                    className="group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Go to Chat
+                    <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full"></span>
+                  </Link>
+                )}
+
+                {/* Navigation Items */}
+                {navigationItems.map((item, index) => (
+                  <Link
+                    key={index}
+                    href={item.href}
+                    className={`group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out ${
+                      isMenuOpen
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 translate-x-8"
+                    }`}
+                    style={{ transitionDelay: `${index * 100}ms` }}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.label}
+                    <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full"></span>
+                  </Link>
+                ))}
+
+                {/* Auth Links for Non-Authenticated Users */}
+                {!authToken &&
+                  authItems.map((item, index) => (
+                    <Link
+                      key={`auth-${index}`}
+                      href={item.href}
+                      className="group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.label}
+                      <span className="absolute left-0 bottom-0 h-0.5 w-0 bg-black transition-all duration-400 ease-in-out group-hover/item:w-full"></span>
+                    </Link>
+                  ))}
+              </nav>
+            </div>
+          </div>
         </div>
       </header>
 

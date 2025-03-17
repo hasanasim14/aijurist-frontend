@@ -39,13 +39,12 @@ export function OTPVerificationStep({
   const handleResendOTP = async () => {
     try {
       setIsResending(true);
-      const res = await fetch(baseURL + "/resend_otp", {
+      await fetch(baseURL + "/resend_otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
       setOtpCooldown(300);
-      console.log("handle Resend otp res=>", res);
       toast.success("OTP resent successfully! Check your email.");
     } catch (error) {
       const errorMessage =
