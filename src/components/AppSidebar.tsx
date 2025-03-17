@@ -247,28 +247,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       : "flex flex-row items-center gap-3"
                   )}
                 >
-                  {/* <SidebarMenuItem>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
-                        isCollapsed
-                          ? "justify-center p-2.5 h-10 w-full"
-                          : "justify-start p-2.5 h-10 flex-1",
-                        isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
-                      )}
-                      onClick={toggleSidebar}
-                    >
-                      <SidebarTrigger className="h-auto w-auto border-none" />
-                      <span
-                        className={cn(
-                          "ml-2 text-sm font-medium",
-                          isCollapsed ? "sr-only" : "block"
-                        )}
-                      ></span>
-                    </Button>
-                  </SidebarMenuItem> */}
-
                   <SidebarMenuItem>
                     <Button
                       variant="outline"
@@ -352,12 +330,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   "flex-1 cursor-pointer",
                                   isMobile ? "py-1.5" : "py-2"
                                 )}
-                                // onClick()
-                                // onClick={() =>
-                                //   console.log("chat details", chat?.chat_id)
-                                // }
-
-                                onClick={() => setSelectedChatId(chat?.chat_id)}
+                                onClick={() => {
+                                  setSelectedChatId(chat?.chat_id);
+                                  if (isMobile) toggleSidebar();
+                                }}
                               >
                                 <div className="truncate">
                                   {chat.chat_title}
@@ -392,7 +368,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         id: chat.chat_id,
                                         title: chat.chat_title,
                                       });
-                                      setOpenPopoverId(null); // Close the popover when edit is clicked
+                                      setOpenPopoverId(null);
+                                      // Close the popover when edit is clicked
+                                      if (isMobile) toggleSidebar();
                                     }}
                                   >
                                     <Edit className="h-4 w-4 mr-2" /> Rename
@@ -404,7 +382,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                         id: chat.chat_id,
                                         title: chat.chat_title,
                                       });
-                                      setOpenPopoverId(null); // Close the popover when delete is clicked
+                                      setOpenPopoverId(null);
+                                      // Close the popover when delete is clicked
+                                      if (isMobile) toggleSidebar();
                                     }}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2 text-red-500" />{" "}
