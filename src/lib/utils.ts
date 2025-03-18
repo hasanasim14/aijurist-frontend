@@ -85,3 +85,45 @@ export interface User {
   lastName: string;
   session_id: string;
 }
+
+/**
+ * Utility function to properly format API responses
+ * @param response The response from the API
+ * @returns Formatted string representation of the response
+ */
+export function formatApiResponse(response: any): string {
+  if (!response) return "No response received";
+
+  try {
+    // If it's already a string, return it
+    if (typeof response === "string") return response;
+
+    // Handle the specific API response structure
+    if (typeof response === "object") {
+      // Check if it's the API response structure with data.llm_response
+      if (response.data && response.data.llm_response) {
+        return response.data.llm_response;
+      }
+
+      // Check if it's just the data object with llm_response
+      if (response.llm_response) {
+        return response.llm_response;
+      }
+
+      // Check for other common response patterns
+      if (response.response) return response.response;
+      if (response.text) return response.text;
+      if (response.content) return response.content;
+      if (response.message && response.message !== "") return response.message;
+
+      // If none of the above, stringify the object
+      return JSON.stringify(response, null, 2);
+    }
+
+    // Default fallback
+    return String(response);
+  } catch (error) {
+    console.error("Error formatting response:", error);
+    return "Error formatting response";
+  }
+}
