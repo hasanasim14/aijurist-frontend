@@ -32,19 +32,19 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
 type ChatContextType = {
-  selectedChatId: number | null;
-  setSelectedChatId: (id: number | null) => void;
+  selectedChatId: number | string;
+  setSelectedChatId: (id: number | string) => void;
   resetPage: () => void;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
+  const [selectedChatId, setSelectedChatId] = useState<number | string>("");
 
   // Reset function to clear chat and bring page to its original state
   const resetPage = () => {
-    setSelectedChatId(null);
+    setSelectedChatId("");
     // Add other states if needed to reset the page fully
   };
 

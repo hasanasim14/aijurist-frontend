@@ -33,6 +33,9 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [chatId, setChatId] = useState<string | number>("");
+  const [threadId, setThreadID] = useState(1);
+  const [questionId, setQuestionID] = useState(1);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -51,6 +54,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   // Fetch past chats when selectedChatId changes
   useEffect(() => {
     console.log("Selected chat ID:", selectedChatId);
+    setChatId(selectedChatId);
     const fetchPastChats = async () => {
       const token = localStorage.getItem("authToken");
       if (!selectedChatId) {
@@ -75,6 +79,17 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         // Notify parent component about chat data status
         if (onChatDataChange) {
           onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
+        }
+
+        // If we have past chat data, we should also get the latest thread_id and question_id
+        if (Array.isArray(data.data) && data.data.length > 0) {
+          // Check if the API response includes these values
+          if (data.data[data.data.length - 1]?.p_thread_id) {
+            setThreadID(data.data[data.data.length - 1].p_thread_id);
+          }
+          if (data.data[data.data.length - 1]?.p_question_id) {
+            setQuestionID(data.data[data.data.length - 1].p_question_id);
+          }
         }
       } catch (error) {
         console.error("Error fetching chat", error);
@@ -115,6 +130,13 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
     const token = localStorage.getItem("authToken");
 
+    console.log("Sending message with:", {
+      SearchQuery: userQuery,
+      chat_id: selectedChatId || "",
+      p_thread_id: threadId,
+      p_question_id: questionId,
+    });
+
     try {
       const res = await fetch("https://devlegal.ai-iscp.com/v1/chat", {
         method: "POST",
@@ -124,10 +146,13 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         },
         body: JSON.stringify({
           SearchQuery: userQuery,
-          fcase: ["string"],
+          // fcase: ["string"],
           chat_id: selectedChatId || "",
-          p_thread_id: 0,
-          p_question_id: 0,
+          // chat_id: chatId,
+          // p_thread_id: 0,
+          // p_question_id: 0,
+          p_thread_id: threadId,
+          p_question_id: questionId,
         }),
       });
 
@@ -135,6 +160,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         throw new Error(`API responded with status: ${res.status}`);
       }
 
+      console.log("Chat id when new", selectedChatId);
       const data = await res.json();
       console.log("API response:", data);
 
@@ -150,14 +176,26 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         },
       ]);
 
-      // If this is a new chat and we received a chat_id, update the context
-      if (
-        data.data &&
-        data.data.chat_id &&
-        (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
-      ) {
-        // Your context update logic here
-        console.log("New chat ID received:", data.data.chat_id);
+      // Always update thread_id and question_id from the response
+      if (data.data) {
+        if (data.data.p_thread_id !== undefined) {
+          console.log("Updating thread ID to:", data.data.p_thread_id);
+          setThreadID(data.data.p_thread_id);
+        }
+
+        if (data.data.p_question_id !== undefined) {
+          console.log("Updating question ID to:", data.data.p_question_id);
+          setQuestionID(data.data.p_question_id);
+        }
+
+        // If this is a new chat and we received a chat_id, update the context
+        if (
+          data.data.chat_id &&
+          (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
+        ) {
+          console.log("New chat ID received:", data.data.chat_id);
+          setChatId(data.data.chat_id);
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -197,12 +235,17 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
     }
   };
 
+  console.log("Current state:", {
+    chatId,
+    threadId,
+    questionId,
+  });
+
   // Render a message (either from past chat or current session)
   const renderMessage = (message: ChatMessage, index: number) => {
     // Determine if it's a user message or AI response
     const isUserMessage =
-      message.role === "user" ||
-      (message.user_query !== undefined && message.llm_response === undefined);
+      message.role === "user" || message.user_query !== undefined;
 
     // Get the content based on message structure
     const content = isUserMessage
@@ -299,12 +342,8 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
             className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 placeholder-gray-500"
             placeholder="Type a message..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === "Enter" &&
-              !e.shiftKey &&
-              (e.preventDefault(), sendMessage())
-            }
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             style={{
               overflowY:
                 textareaRef.current && textareaRef.current.scrollHeight > 160
