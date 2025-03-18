@@ -122,8 +122,8 @@ export default function ChatUI() {
     <>
       <div className="relative h-screen flex flex-col items-center bg-[#f9fafb]">
         <NotificationBar />
-        {showHeading && !hasChatData && (
-          <div className="mt-16 mb-8 text-center w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
+        {showHeading && (
+          <div className="mt-8 mb-8 text-center w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
             <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-black to-purple-500 text-transparent bg-clip-text">
               Hi there, {user?.firstName}
             </span>
@@ -135,13 +135,13 @@ export default function ChatUI() {
               Use one of the most common prompts below or use your own to begin
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full max-w-5xl mx-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full max-w-5xl mx-auto">
               {[1, 2, 3, 4].map((item, index) => {
                 const Icon = icons[index % icons.length];
                 return (
                   <Card
                     key={item}
-                    className="flex flex-col items-center p-3 sm:p-6 shadow-md rounded-xl bg-white dark:bg-gray-800 h-full"
+                    className="flex flex-col items-center p-3 sm:p-5 shadow-md rounded-xl bg-white dark:bg-gray-800 h-full"
                   >
                     <Icon
                       size={32}
