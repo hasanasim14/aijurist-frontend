@@ -1,23 +1,64 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import type React from "react";
+
+import { useEffect, useState, useRef } from "react";
 import { useChatContext } from "@/context/ChatContext";
+import { formatApiResponse } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import Image from "next/image";
+import { Send, Paperclip, ScrollText } from "lucide-react";
 
 interface ChatSectionProps {
   onChatDataChange?: (hasChatData: boolean) => void;
 }
 
+interface ChatMessage {
+  user_query?: string | object;
+  llm_response?: string | object;
+  role?: string;
+  content?: string;
+}
+
 const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const { selectedChatId } = useChatContext();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [pastChat, setPastChat] = useState<any[]>([]);
+  const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
+  const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    console.log("the context api is", selectedChatId);
-    const pastChats = async () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "40px";
+      textareaRef.current.style.height = `${Math.min(
+        textareaRef.current.scrollHeight,
+        160
+      )}px`;
+    }
+  }, [input]);
+
+  // Fetch past chats when selectedChatId changes
+  useEffect(() => {
+    console.log("Selected chat ID:", selectedChatId);
+    const fetchPastChats = async () => {
       const token = localStorage.getItem("authToken");
-      // const chat_id = 1;
+      if (!selectedChatId) {
+        setPastChat([]);
+        if (onChatDataChange) onChatDataChange(false);
+        return;
+      }
+
       try {
         const res = await fetch("https://devlegal.ai-iscp.com/pastchat_t5", {
           method: "POST",
@@ -28,7 +69,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
           body: JSON.stringify({ chat_id: selectedChatId }),
         });
         const data = await res.json();
-        console.log("Chat data=>", data.data);
+        console.log("Past chat data:", data.data);
         setPastChat(data.data || []);
 
         // Notify parent component about chat data status
@@ -44,55 +85,287 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       }
     };
 
-    if (selectedChatId) {
-      pastChats();
-    } else {
-      setPastChat([]);
-      if (onChatDataChange) {
-        onChatDataChange(false);
-      }
-    }
+    fetchPastChats();
+    // Reset current messages when changing chats
+    setCurrentMessages([]);
   }, [selectedChatId, onChatDataChange]);
 
-  console.log("the context api is", selectedChatId);
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [pastChat, currentMessages, isLoading]);
 
-  return (
-    <>
-      {Array.isArray(pastChat) && pastChat.length > 0 ? (
-        pastChat.map((chat, index) => (
-          <div key={index} className="flex flex-col space-y-4">
-            {/* User query */}
-            <div className="p-4 my-4 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
-              {typeof chat?.user_query === "object"
-                ? Object.values(chat?.user_query)[0]
-                : chat?.user_query}
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Handle sending a new message
+  const sendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userQuery = input.trim();
+    setInput("");
+    setIsLoading(true);
+
+    // Add user message to current messages
+    setCurrentMessages((prev) => [
+      ...prev,
+      { role: "user", content: userQuery },
+    ]);
+
+    const token = localStorage.getItem("authToken");
+
+    try {
+      const res = await fetch("https://devlegal.ai-iscp.com/v1/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          SearchQuery: userQuery,
+          fcase: ["string"],
+          chat_id: selectedChatId || "",
+          p_thread_id: 0,
+          p_question_id: 0,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`API responded with status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log("API response:", data);
+
+      // Add AI response to current messages
+      setCurrentMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            data.data && data.data.llm_response
+              ? data.data.llm_response
+              : formatApiResponse(data),
+        },
+      ]);
+
+      // If this is a new chat and we received a chat_id, update the context
+      if (
+        data.data &&
+        data.data.chat_id &&
+        (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
+      ) {
+        // Your context update logic here
+        console.log("New chat ID received:", data.data.chat_id);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setCurrentMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, there was an error processing your request.",
+        },
+      ]);
+    } finally {
+      setIsLoading(false);
+      // Focus the input field after sending
+      inputRef.current?.focus();
+    }
+  };
+
+  // Handle input changes and auto-resize textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+
+    // Auto-resize the textarea
+    if (inputRef.current) {
+      inputRef.current.style.height = "40px";
+      inputRef.current.style.height = `${Math.min(
+        inputRef.current.scrollHeight,
+        160
+      )}px`;
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  // Render a message (either from past chat or current session)
+  const renderMessage = (message: ChatMessage, index: number) => {
+    // Determine if it's a user message or AI response
+    const isUserMessage =
+      message.role === "user" ||
+      (message.user_query !== undefined && message.llm_response === undefined);
+
+    // Get the content based on message structure
+    const content = isUserMessage
+      ? message.content || message.user_query
+      : message.content || message.llm_response;
+
+    // Format the content for display
+    const displayContent =
+      typeof content === "object"
+        ? JSON.stringify(content)
+        : String(content || "");
+
+    return (
+      <div key={index} className="flex flex-col space-y-4">
+        {isUserMessage ? (
+          <div className="p-4 my-4 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
+            {displayContent}
+          </div>
+        ) : (
+          <div className="flex items-start space-x-2 self-start mr-10">
+            {/* White Circle with Logo */}
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
+              <Image
+                src="/logo-small.png"
+                width={20}
+                height={20}
+                alt="Chatbot Logo"
+              />
             </div>
 
-            {/* Chatbot response */}
-            <div className="flex items-start space-x-2 self-start mr-10">
-              {/* White Circle with Logo */}
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
-                <Image
-                  src="/logo-small.png"
-                  width={20}
-                  height={20}
-                  alt="Chatbot Logo"
-                />
-              </div>
+            {/* Response Text */}
+            <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap">
+              {displayContent}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
-              {/* Response Text */}
-              <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200">
-                {typeof chat.llm_response === "object"
-                  ? Object.values(chat?.llm_response)[0]
-                  : chat?.llm_response}
+  return (
+    <div className="flex flex-col h-full items-center">
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-auto pb-20">
+        {/* Past Chat Messages */}
+        {Array.isArray(pastChat) &&
+          pastChat.length > 0 &&
+          pastChat.map((chat, index) => renderMessage(chat, index))}
+
+        {/* Current Session Messages */}
+        {currentMessages.map((message, index) =>
+          renderMessage(message, pastChat.length + index)
+        )}
+
+        {/* Loading Indicator */}
+        {isLoading && (
+          <div className="flex items-start space-x-2 self-start mr-10">
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
+              <Image
+                src="/logo-small.png"
+                width={20}
+                height={20}
+                alt="Chatbot Logo"
+              />
+            </div>
+            <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200">
+              <div className="flex space-x-2">
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></div>
               </div>
             </div>
           </div>
-        ))
-      ) : (
-        <p className="text-center text-gray-500"> </p>
-      )}
-    </>
+        )}
+
+        {/* Invisible element to scroll to */}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      <div className="fixed bottom-4 w-full max-w-sm md:max-w-2xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col">
+        <div className="w-full relative">
+          <textarea
+            ref={textareaRef}
+            className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 placeholder-gray-500"
+            placeholder="Type a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              (e.preventDefault(), sendMessage())
+            }
+            style={{
+              overflowY:
+                textareaRef.current && textareaRef.current.scrollHeight > 160
+                  ? "auto"
+                  : "hidden",
+              minHeight: "40px",
+              maxHeight: "160px",
+            }}
+          />
+        </div>
+
+        {/* Icons inside the input box */}
+        <div className="w-full flex justify-between items-center pt-2">
+          <div className="flex gap-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <span className="flex items-center gap-1 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
+                  <Paperclip size={18} className="text-gray-600" />
+                </span>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Upload Documents</DialogTitle>
+                  <DialogDescription>
+                    Add your documents here.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <span className="flex items-center gap-1 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
+                  <ScrollText size={18} className="text-gray-600" />
+                </span>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Summary Cases</DialogTitle>
+                  <DialogDescription>
+                    Choose a case to summarize them.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Send Button */}
+          <button
+            onClick={sendMessage}
+            className={`p-2 rounded-full transition-colors ${
+              input.trim()
+                ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
+                : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+            }`}
+          >
+            <Send size={18} className="m-1" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
