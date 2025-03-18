@@ -76,7 +76,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
-  const { setSelectedChatId } = useChatContext();
+  const { setSelectedChatId, resetPage } = useChatContext();
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
@@ -274,9 +274,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           : "justify-start p-2.5 h-10 flex-1",
                         isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
                       )}
+                      onClick={resetPage}
                       asChild
                     >
-                      <Link href="#">
+                      <Link href="/">
                         <MessageSquarePlus className="w-5 h-5 shrink-0" />
                         <span
                           className={cn(
