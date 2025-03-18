@@ -351,7 +351,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-800"
+                                    className="h-6 w-6 hover:bg-gray-200 dark:hover:bg-gray-800 cursor-pointer"
                                   >
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
@@ -362,7 +362,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   className="w-32 p-1"
                                 >
                                   <button
-                                    className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                    className="flex items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
                                     onClick={() => {
                                       setChatToEdit({
                                         id: chat.chat_id,
@@ -376,7 +376,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     <Edit className="h-4 w-4 mr-2" /> Rename
                                   </button>
                                   <button
-                                    className="flex text-red-500 items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+                                    className="flex text-red-500 items-center w-full px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
                                     onClick={() => {
                                       setChatToDelete({
                                         id: chat.chat_id,
@@ -425,7 +425,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
+                    "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center cursor-pointer",
                     isCollapsed
                       ? "justify-center p-2.5 h-10 w-full"
                       : "justify-start p-2.5 h-10 flex-1",
@@ -484,7 +484,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Button
                   variant="outline"
                   className={cn(
-                    "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center",
+                    "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center cursor-pointer",
                     isCollapsed
                       ? "justify-center p-2.5 h-10 w-full"
                       : "justify-start p-2.5 h-10 flex-1",
@@ -605,13 +605,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               />
             </div>
             <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setChatToEdit(null)}>
+              <Button
+                variant="outline"
+                className="cursor-pointer"
+                onClick={() => setChatToEdit(null)}
+              >
                 Cancel
               </Button>
               <Button
                 variant="default"
                 onClick={handleEditChat}
                 disabled={!newChatTitle.trim()}
+                className="cursor-pointer"
               >
                 Save
               </Button>
