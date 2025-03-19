@@ -158,11 +158,11 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         // If we have past chat data, we should also get the latest thread_id and question_id
         if (Array.isArray(data.data) && data.data.length > 0) {
           // Check if the API response includes these values
-          if (data.data[data.data.length - 1]?.p_thread_id) {
-            setThreadID(data.data[data.data.length - 1].p_thread_id);
+          if (data.data[data.data.length - 1]?.thread_id) {
+            setThreadID(data.data[data.data.length - 1].thread_id);
           }
-          if (data.data[data.data.length - 1]?.p_question_id) {
-            setQuestionID(data.data[data.data.length - 1].p_question_id);
+          if (data.data[data.data.length - 1]?.question_id) {
+            setQuestionID(data.data[data.data.length - 1].question_id);
           }
         }
       } catch (error) {
