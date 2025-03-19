@@ -44,6 +44,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/context/ChatContext";
+import { useApiContext } from "@/context/APIContext";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const {
@@ -77,6 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [newChatTitle, setNewChatTitle] = useState("");
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
   const { setSelectedChatId, resetPage } = useChatContext();
+  const { shouldCallApi } = useApiContext();
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
@@ -180,6 +182,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  // Get Past titles
   useEffect(() => {
     const fetchChatTitles = async () => {
       const token = localStorage.getItem("authToken");
@@ -207,7 +210,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     };
 
     fetchChatTitles();
-  }, []);
+  }, [shouldCallApi]);
 
   // Set the new chat title when a chat is selected for editing
   useEffect(() => {
@@ -331,6 +334,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                   isMobile ? "py-1.5" : "py-2"
                                 )}
                                 onClick={() => {
+                                  console.log("chat details", chat);
                                   setSelectedChatId(chat?.chat_id);
                                   if (isMobile) toggleSidebar();
                                 }}

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import { Send, Paperclip, ScrollText } from "lucide-react";
+import { useApiContext } from "@/context/APIContext";
 
 interface ChatSectionProps {
   onChatDataChange?: (hasChatData: boolean) => void;
@@ -29,6 +30,8 @@ interface ChatMessage {
 
 const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const { selectedChatId } = useChatContext();
+  // const { setShouldCallApi } = useChatContext();
+  const { setShouldCallApi } = useApiContext();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -50,6 +53,60 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       )}px`;
     }
   }, [input]);
+
+  // Fetch past chats when selectedChatId changes
+  // useEffect(() => {
+  //   console.log("Selected chat ID:", selectedChatId);
+  //   setChatId(selectedChatId);
+  //   const fetchPastChats = async () => {
+  //     const token = localStorage.getItem("authToken");
+  //     if (!selectedChatId) {
+  //       setPastChat([]);
+  //       if (onChatDataChange) onChatDataChange(false);
+  //       return;
+  //     }
+
+  //     try {
+  //       const res = await fetch("https://devlegal.ai-iscp.com/pastchat_t5", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({ chat_id: selectedChatId }),
+  //       });
+  //       const data = await res.json();
+  //       console.log("Past chat data:", data.data);
+  //       setPastChat(data.data || []);
+
+  //       // Notify parent component about chat data status
+  //       if (onChatDataChange) {
+  //         onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
+  //       }
+
+  //       // If we have past chat data, we should also get the latest thread_id and question_id
+  //       if (Array.isArray(data.data) && data.data.length > 0) {
+  //         // Check if the API response includes these values
+  //         if (data.data[data.data.length - 1]?.p_thread_id) {
+  //           setThreadID(data.data[data.data.length - 1].p_thread_id);
+  //         }
+  //         if (data.data[data.data.length - 1]?.p_question_id) {
+  //           setQuestionID(data.data[data.data.length - 1].p_question_id);
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error fetching chat", error);
+  //       setPastChat([]);
+  //       if (onChatDataChange) {
+  //         onChatDataChange(false);
+  //       }
+  //     }
+  //   };
+
+  //   fetchPastChats();
+  //   // Reset current messages when changing chats
+  //   setCurrentMessages([]);
+  // }, [selectedChatId, onChatDataChange]);
 
   // Fetch past chats when selectedChatId changes
   useEffect(() => {
@@ -74,7 +131,24 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         });
         const data = await res.json();
         console.log("Past chat data:", data.data);
-        setPastChat(data.data || []);
+
+        // Process the past chat data to include API responses
+        const processedPastChat = data.data
+          .map((chat: any) => {
+            return [
+              {
+                role: "user",
+                content: chat.user_query,
+              },
+              {
+                role: "assistant",
+                content: chat.llm_response,
+              },
+            ];
+          })
+          .flat();
+
+        setPastChat(processedPastChat);
 
         // Notify parent component about chat data status
         if (onChatDataChange) {
@@ -150,7 +224,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
           chat_id: selectedChatId || "",
           // chat_id: chatId,
           // p_thread_id: 0,
-          // p_question_id: 0,
+          // p_question_id: 1,
           p_thread_id: threadId,
           p_question_id: questionId,
         }),
@@ -164,6 +238,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       const data = await res.json();
       console.log("API response:", data);
 
+      console.log("Thread id", data?.data?.thread_id);
       // Add AI response to current messages
       setCurrentMessages((prev) => [
         ...prev,
@@ -178,14 +253,14 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
       // Always update thread_id and question_id from the response
       if (data.data) {
-        if (data.data.p_thread_id !== undefined) {
-          console.log("Updating thread ID to:", data.data.p_thread_id);
-          setThreadID(data.data.p_thread_id);
+        if (data.data.thread_id !== undefined) {
+          console.log("Updating thread ID to:", data.data.thread_id);
+          setThreadID(data.data.thread_id);
         }
 
-        if (data.data.p_question_id !== undefined) {
-          console.log("Updating question ID to:", data.data.p_question_id);
-          setQuestionID(data.data.p_question_id);
+        if (data.data.question_id !== undefined) {
+          console.log("Updating question ID to:", data.data.question_id);
+          setQuestionID(data.data.question_id);
         }
 
         // If this is a new chat and we received a chat_id, update the context
@@ -196,6 +271,39 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
           console.log("New chat ID received:", data.data.chat_id);
           setChatId(data.data.chat_id);
         }
+      }
+
+      // Run another API based on conditions
+      if (res.ok && selectedChatId === "") {
+        const generateHeading = async () => {
+          try {
+            const anotherRes = await fetch(
+              "https://devlegal.ai-iscp.com/gen_heading",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  chat_id: data?.data?.chat_id,
+                  llm_response: data?.data?.llm_response,
+                  SearchQuery: data?.data?.user_query,
+                }),
+              }
+            );
+            const anotherData = await anotherRes.json();
+            console.log("Another API data:", anotherData);
+            if (anotherRes.ok) {
+              // const { setShouldCallApi } = useChatContext();
+              setShouldCallApi(true);
+            }
+            // Process another API data
+          } catch (error) {
+            console.error("Error running another API:", error);
+          }
+        };
+        generateHeading();
       }
     } catch (error) {
       console.error("Error sending message:", error);
@@ -261,7 +369,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
     return (
       <div key={index} className="flex flex-col space-y-4">
         {isUserMessage ? (
-          <div className="p-4 my-4 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
+          <div className="p-3 my-4 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
             {displayContent}
           </div>
         ) : (

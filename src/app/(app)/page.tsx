@@ -6,11 +6,8 @@ import NotificationBar from "@/components/NotificationBar";
 import ChatSection from "@/components/chat/ChatSection";
 import { User } from "@/lib/utils";
 import {
-  Send,
   Globe,
   Lightbulb,
-  Paperclip,
-  ScrollText,
   BookOpen,
   MessageCircle,
   Code,
@@ -67,26 +64,11 @@ export default function ChatUI() {
     }
   };
 
-  // Suggested prompts for the welcome screen
-  const suggestedPrompts = [
-    "What are the key elements of a contract?",
-    "Explain the difference between civil and criminal law",
-    "What is a legal precedent?",
-    "How do I file a small claims case?",
-  ];
-
-  // Handle suggested prompt selection
-  const handleSuggestedPrompt = (prompt: string) => {
-    // This will be handled by the ChatSection component
-    const event = new CustomEvent("useSuggestedPrompt", { detail: prompt });
-    document.dispatchEvent(event);
-  };
-
   return (
     <div className="relative h-screen flex flex-col items-center bg-[#f9fafb]">
       <NotificationBar />
 
-      {showHeading && (
+      {/* {showHeading && (
         <div className="mt-8 mb-8 text-center w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
           <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-black to-purple-500 text-transparent bg-clip-text">
             Hi there, {user?.firstName || "User"}
@@ -99,19 +81,6 @@ export default function ChatUI() {
             Use one of the most common prompts below or use your own to begin
           </p>
 
-          {/* <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full max-w-5xl mx-auto">
-            {suggestedPrompts.map((prompt, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center p-3 sm:p-5 shadow-md rounded-xl bg-white h-full cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => handleSuggestedPrompt(prompt)}
-              >
-                <div className="text-center p-1 sm:p-4 w-full">
-                  <p className="text-xs sm:text-sm text-gray-700">{prompt}</p>
-                </div>
-              </div>
-            ))}
-          </div> */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full max-w-5xl mx-auto">
             {[1, 2, 3, 4].map((item, index) => {
               const Icon = icons[index % icons.length];
@@ -137,7 +106,7 @@ export default function ChatUI() {
             })}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Chat Messages Container */}
       <div
