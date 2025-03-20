@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { baseURL } from "@/lib/utils";
 import { BasicInfoStep } from "@/components/signup/StepOne";
 import { PasswordStep } from "@/components/signup/StepTwo";
 import { OTPVerificationStep } from "@/components/signup/StepThree";
@@ -74,7 +73,7 @@ export default function SignupPage() {
   const handleRegistration = async () => {
     setSignupLoading(true);
     try {
-      await fetch(baseURL + "/register_user", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/register_user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,11 +101,14 @@ export default function SignupPage() {
   const handleOTPValidation = async () => {
     setSignupLoading(true);
     try {
-      const res = await fetch(baseURL + "/verify_user_otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email, otp: formData.otp }),
-      });
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/verify_user_otp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, otp: formData.otp }),
+        }
+      );
       toast.success("Account verified successfully! Welcome aboard.");
 
       const responseData = await res.json();

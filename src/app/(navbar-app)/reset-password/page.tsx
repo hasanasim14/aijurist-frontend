@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Loader2, XCircle, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { baseURL } from "@/lib/utils";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -56,11 +55,14 @@ export default function ResetPassword() {
   const resetPassword = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(baseURL + "/reset_password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: "/", new_password: password }),
-      });
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/reset_password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: "/", new_password: password }),
+        }
+      );
       if (res.ok) {
         toast.success("Password Reset Successful");
       } else {

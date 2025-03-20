@@ -9,7 +9,6 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { baseURL } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 interface OTPVerificationStepProps {
@@ -39,7 +38,7 @@ export function OTPVerificationStep({
   const handleResendOTP = async () => {
     try {
       setIsResending(true);
-      await fetch(baseURL + "/resend_otp", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/resend_otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),

@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { baseURL } from "@/lib/utils";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -76,14 +75,17 @@ export default function LoginPage() {
     setLoginLoading(true);
 
     try {
-      const res = await fetch(baseURL + "/login_user", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/login_user",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
 
       if (!res.ok) {
         throw new Error("Invalid email or password");
@@ -92,7 +94,6 @@ export default function LoginPage() {
       toast.success("Login successful! Redirecting...");
 
       const responseData = await res.json();
-      console.log("responseDaata inside =>", responseData?.data?.token_payload);
       const authToken = responseData?.data?.token;
       localStorage.setItem("authToken", authToken);
       sessionStorage.setItem(

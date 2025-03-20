@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useChatContext } from "@/context/ChatContext";
-import NotificationBar from "@/components/NotificationBar";
-import ChatSection from "@/components/chat/ChatSection";
 import { User } from "@/lib/utils";
 import {
   Globe,
@@ -16,6 +14,8 @@ import {
   Pencil,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import NotificationBar from "@/components/NotificationBar";
+import ChatSection from "@/components/chat/ChatSection";
 
 const icons = [
   Globe,
@@ -32,7 +32,7 @@ export default function ChatUI() {
   const [showHeading, setShowHeading] = useState(true);
   const [hasChatData, setHasChatData] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const { selectedChatId } = useChatContext();
+  const { selectedChatId, resetHeading } = useChatContext();
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -68,7 +68,7 @@ export default function ChatUI() {
     <div className="relative h-screen flex flex-col items-center bg-[#f9fafb]">
       <NotificationBar />
 
-      {/* {showHeading && (
+      {resetHeading && showHeading && (
         <div className="mt-8 mb-8 text-center w-full max-w-7xl mx-auto px-4 flex flex-col items-center justify-center">
           <span className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-black to-purple-500 text-transparent bg-clip-text">
             Hi there, {user?.firstName || "User"}
@@ -106,11 +106,11 @@ export default function ChatUI() {
             })}
           </div>
         </div>
-      )} */}
+      )}
 
       {/* Chat Messages Container */}
       <div
-        className={`w-full max-w-[70%] flex-1 overflow-y-auto p-6 pb-24 ${
+        className={`w-full max-w-[100%] flex-1 overflow-y-auto p-6 pb-24 ${
           hasChatData ? "pt-16" : ""
         }`}
       >

@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ChevronLeft, Loader2 } from "lucide-react";
-import { baseURL } from "@/lib/utils";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -40,13 +39,16 @@ export default function ForgotPassword() {
     setIsLoading(true);
 
     try {
-      const res = await fetch(baseURL + "/forgot_password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email,
-        }),
-      });
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/forgot_password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email,
+          }),
+        }
+      );
 
       if (res.ok) {
         toast.success("Password Reset Link sent");

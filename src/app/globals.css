@@ -127,3 +127,10 @@
     font-family: "Poppins", sans-serif;
   }
 }
+
+/* Remove yellow focus outline when clicking anchors */
+:target {
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}

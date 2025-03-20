@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { baseURL, cities } from "@/lib/utils";
+import { cities } from "@/lib/utils";
 
 interface BasicInfoStepProps {
   formData: {
@@ -73,11 +73,14 @@ export function BasicInfoStep({
       if (!emailToCheck || !validateEmail(emailToCheck)) return;
 
       try {
-        const res = await fetch(baseURL + "/validate_email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: emailToCheck }),
-        });
+        const res = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + "/validate_email",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: emailToCheck }),
+          }
+        );
 
         const data = await res.json();
 

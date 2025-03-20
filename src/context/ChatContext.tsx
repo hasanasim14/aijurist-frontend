@@ -7,6 +7,8 @@ type ChatContextType = {
   selectedChatId: number | string;
   setSelectedChatId: (id: number | string) => void;
   resetPage: () => void;
+  resetHeading: boolean;
+  setResetHeading: (reset: boolean) => void;
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -17,10 +19,11 @@ type ChatProviderProps = {
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [selectedChatId, setSelectedChatId] = useState<number | string>("");
+  const [resetHeading, setResetHeading] = useState(true);
 
-  // Reset function to clear chat and bring page to its original state
   const resetPage = () => {
     setSelectedChatId("");
+    setResetHeading(false);
   };
 
   return (
@@ -29,6 +32,8 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         selectedChatId,
         setSelectedChatId,
         resetPage,
+        resetHeading,
+        setResetHeading,
       }}
     >
       {children}
