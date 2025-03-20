@@ -29,8 +29,7 @@ interface ChatMessage {
 }
 
 const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
-  const { selectedChatId } = useChatContext();
-  // const { setShouldCallApi } = useChatContext();
+  const { selectedChatId, setResetHeading } = useChatContext();
   const { setShouldCallApi } = useApiContext();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
@@ -55,62 +54,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   }, [input]);
 
   // Fetch past chats when selectedChatId changes
-  // useEffect(() => {
-  //   console.log("Selected chat ID:", selectedChatId);
-  //   setChatId(selectedChatId);
-  //   const fetchPastChats = async () => {
-  //     const token = localStorage.getItem("authToken");
-  //     if (!selectedChatId) {
-  //       setPastChat([]);
-  //       if (onChatDataChange) onChatDataChange(false);
-  //       return;
-  //     }
-
-  //     try {
-  //       const res = await fetch("https://devlegal.ai-iscp.com/pastchat_t5", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //         body: JSON.stringify({ chat_id: selectedChatId }),
-  //       });
-  //       const data = await res.json();
-  //       console.log("Past chat data:", data.data);
-  //       setPastChat(data.data || []);
-
-  //       // Notify parent component about chat data status
-  //       if (onChatDataChange) {
-  //         onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
-  //       }
-
-  //       // If we have past chat data, we should also get the latest thread_id and question_id
-  //       if (Array.isArray(data.data) && data.data.length > 0) {
-  //         // Check if the API response includes these values
-  //         if (data.data[data.data.length - 1]?.p_thread_id) {
-  //           setThreadID(data.data[data.data.length - 1].p_thread_id);
-  //         }
-  //         if (data.data[data.data.length - 1]?.p_question_id) {
-  //           setQuestionID(data.data[data.data.length - 1].p_question_id);
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching chat", error);
-  //       setPastChat([]);
-  //       if (onChatDataChange) {
-  //         onChatDataChange(false);
-  //       }
-  //     }
-  //   };
-
-  //   fetchPastChats();
-  //   // Reset current messages when changing chats
-  //   setCurrentMessages([]);
-  // }, [selectedChatId, onChatDataChange]);
-
-  // Fetch past chats when selectedChatId changes
   useEffect(() => {
-    console.log("Selected chat ID:", selectedChatId);
     setChatId(selectedChatId);
     const fetchPastChats = async () => {
       const token = localStorage.getItem("authToken");
@@ -121,16 +65,18 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       }
 
       try {
-        const res = await fetch("https://devlegal.ai-iscp.com/pastchat_t5", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ chat_id: selectedChatId }),
-        });
+        const res = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL2 + "/pastchat_t5",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ chat_id: selectedChatId }),
+          }
+        );
         const data = await res.json();
-        console.log("Past chat data:", data.data);
 
         // Process the past chat data to include API responses
         const processedPastChat = data.data
@@ -202,17 +148,13 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       { role: "user", content: userQuery },
     ]);
 
+    // Wait for the state update to be reflected
+    // await new Promise((resolve) => setTimeout(resolve, 0));
+
     const token = localStorage.getItem("authToken");
 
-    console.log("Sending message with:", {
-      SearchQuery: userQuery,
-      chat_id: selectedChatId || "",
-      p_thread_id: threadId,
-      p_question_id: questionId,
-    });
-
     try {
-      const res = await fetch("https://devlegal.ai-iscp.com/v1/chat", {
+      const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/v1/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -222,9 +164,6 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
           SearchQuery: userQuery,
           // fcase: ["string"],
           chat_id: selectedChatId || "",
-          // chat_id: chatId,
-          // p_thread_id: 0,
-          // p_question_id: 1,
           p_thread_id: threadId,
           p_question_id: questionId,
         }),
@@ -234,11 +173,8 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         throw new Error(`API responded with status: ${res.status}`);
       }
 
-      console.log("Chat id when new", selectedChatId);
       const data = await res.json();
-      console.log("API response:", data);
 
-      console.log("Thread id", data?.data?.thread_id);
       // Add AI response to current messages
       setCurrentMessages((prev) => [
         ...prev,
@@ -254,12 +190,10 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       // Always update thread_id and question_id from the response
       if (data.data) {
         if (data.data.thread_id !== undefined) {
-          console.log("Updating thread ID to:", data.data.thread_id);
           setThreadID(data.data.thread_id);
         }
 
         if (data.data.question_id !== undefined) {
-          console.log("Updating question ID to:", data.data.question_id);
           setQuestionID(data.data.question_id);
         }
 
@@ -268,7 +202,6 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
           data.data.chat_id &&
           (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
         ) {
-          console.log("New chat ID received:", data.data.chat_id);
           setChatId(data.data.chat_id);
         }
       }
@@ -278,7 +211,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         const generateHeading = async () => {
           try {
             const anotherRes = await fetch(
-              "https://devlegal.ai-iscp.com/gen_heading",
+              process.env.NEXT_PUBLIC_BASE_URL2 + "/gen_heading",
               {
                 method: "POST",
                 headers: {
@@ -292,8 +225,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
                 }),
               }
             );
-            const anotherData = await anotherRes.json();
-            console.log("Another API data:", anotherData);
+            // const anotherData = await anotherRes.json();
             if (anotherRes.ok) {
               // const { setShouldCallApi } = useChatContext();
               setShouldCallApi(true);
@@ -340,16 +272,15 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+      // setTimeout();
+      setResetHeading(false);
     }
   };
 
-  console.log("Current state:", {
-    chatId,
-    threadId,
-    questionId,
-  });
+  useEffect(() => {
+    console.log("currentMessages:", currentMessages);
+  }, [currentMessages]);
 
-  // Render a message (either from past chat or current session)
   const renderMessage = (message: ChatMessage, index: number) => {
     // Determine if it's a user message or AI response
     const isUserMessage =

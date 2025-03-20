@@ -75,8 +75,6 @@ export const cities = [
   { label: "Wazirabad", value: "wazirabad" },
 ];
 
-export const baseURL = "http://192.168.1.10:9630";
-
 export interface User {
   city: string;
   companyName: string;
