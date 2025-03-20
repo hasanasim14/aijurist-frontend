@@ -152,41 +152,24 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
   // Replace the scrollToMessage function with this improved version
   const scrollToMessage = (index: number) => {
-    console.log(`Attempting to scroll to message index: ${index}`);
-
     // Create the anchor ID
     const anchorId = `query-${index}`;
 
     // Get the element reference
     const element = messageRefs.current[anchorId];
 
-    console.log(`Looking for element with ID: ${anchorId}`);
-    console.log(`Available refs:`, Object.keys(messageRefs.current));
-
     if (element) {
-      console.log(`Found element, scrolling to it`);
       // Scroll to the element
       element.scrollIntoView({ behavior: "smooth", block: "start" });
 
-      // Highlight the message briefly
-      element.classList.add("bg-yellow-100");
-      setTimeout(() => {
-        element.classList.remove("bg-yellow-100");
-      }, 2000);
+      // Removed the highlighting code
     } else {
-      console.log(`Element with ID ${anchorId} not found`);
-
       // Fallback: try to find the element by ID in the DOM
       const domElement = document.getElementById(anchorId);
       if (domElement) {
-        console.log(`Found element by DOM ID, scrolling to it`);
         domElement.scrollIntoView({ behavior: "smooth", block: "start" });
 
-        // Highlight the message briefly
-        domElement.classList.add("bg-yellow-100");
-        setTimeout(() => {
-          domElement.classList.remove("bg-yellow-100");
-        }, 2000);
+        // Removed the highlighting code
       } else {
         console.log(`Element with ID ${anchorId} not found in DOM either`);
       }
@@ -394,16 +377,6 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
     // Create anchor ID for user messages
     const anchorId = isUserMessage ? `query-${userMessageIndex}` : "";
 
-    // Debug
-    if (isUserMessage) {
-      console.log(
-        `Creating message with ID: ${anchorId} for index: ${index}, content: ${displayContent.substring(
-          0,
-          20
-        )}`
-      );
-    }
-
     return (
       <div
         key={index}
@@ -413,7 +386,6 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
             ? (el) => {
                 if (el) {
                   messageRefs.current[anchorId] = el;
-                  console.log(`Stored ref for ${anchorId}`);
                 }
               }
             : null
@@ -503,7 +475,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         </div>
 
         {/* Input Area */}
-        <div className="fixed bottom-4 w-full max-w-sm md:max-w-2xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col">
+        <div className="fixed bottom-4 w-full max-w-sm md:max-w-2xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center">
           <div className="w-full relative">
             <textarea
               ref={textareaRef}
