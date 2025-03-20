@@ -89,6 +89,8 @@ export interface User {
  * @param response The response from the API
  * @returns Formatted string representation of the response
  */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function formatApiResponse(response: any): string {
   if (!response) return "No response received";
 

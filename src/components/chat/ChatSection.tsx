@@ -66,6 +66,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   // Fetch past chats when selectedChatId changes
   useEffect(() => {
     setChatId(selectedChatId);
+    console.log(chatId);
     const fetchPastChats = async () => {
       const token = localStorage.getItem("authToken");
       if (!selectedChatId) {
@@ -89,6 +90,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         const data = await res.json();
 
         // Process the past chat data to include API responses
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const processedPastChat = data.data.flatMap((chat: any) => {
           return [
             {
