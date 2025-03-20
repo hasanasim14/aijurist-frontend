@@ -16,7 +16,6 @@ import {
   Trash2,
   Menu,
   AlertTriangle,
-  // MenuSquare,
 } from "lucide-react";
 import {
   Sidebar,
@@ -27,7 +26,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarRail,
-  // SidebarTrigger,
   SidebarProvider,
   useSidebar,
 } from "@/components/ui/sidebar";
@@ -37,23 +35,17 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { baseURL, cn } from "@/lib/utils";
-import Link from "next/link";
-import toast from "react-hot-toast";
+import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { useChatContext } from "@/context/ChatContext";
 import { useApiContext } from "@/context/APIContext";
+import Link from "next/link";
+import toast from "react-hot-toast";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const {
-    state,
-    isMobile,
-    // , openMobile,
-    setOpenMobile,
-    toggleSidebar,
-  } = useSidebar();
+  const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
   const isCollapsed = state === "collapsed";
 
   // Create a mobile trigger that will open the sidebar sheet on mobile
@@ -77,13 +69,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
-  const { setSelectedChatId, resetPage } = useChatContext();
+  const { setSelectedChatId, resetPage, setResetHeading } = useChatContext();
   const { shouldCallApi } = useApiContext();
 
   const handleLogout = async () => {
     const token = localStorage.getItem("authToken");
     try {
-      await fetch(baseURL + "/logout_user", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/logout_user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token }),
@@ -99,16 +91,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
-  // Delete chat functionality
+  // Delete Chat Functionality
   const handleDeleteChat = async () => {
     if (!chatToDelete) return;
 
-    console.log("The chat id I am deleting is=>>", chatToDelete?.id);
-
     const token = localStorage.getItem("authToken");
     try {
-      // Replace with your actual delete API endpoint
-      await fetch("https://devlegal.ai-iscp.com/delete_chat_update", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/delete_chat_update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -138,15 +127,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  // Edit Chat Functionality
   const handleEditChat = async () => {
     if (!chatToEdit || !newChatTitle.trim()) return;
 
-    console.log("The chat id I am deleting is=>>", chatToEdit?.id);
-
     const token = localStorage.getItem("authToken");
     try {
-      // Replace with your actual rename API endpoint
-      await fetch("https://devlegal.ai-iscp.com/rename_chat_title", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/rename_chat_title", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -186,10 +173,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useEffect(() => {
     const fetchChatTitles = async () => {
       const token = localStorage.getItem("authToken");
-      console.log("token", token);
       try {
         const res = await fetch(
-          "https://devlegal.ai-iscp.com/get_chat_titles",
+          process.env.NEXT_PUBLIC_BASE_URL2 + "/get_chat_titles",
           {
             method: "POST",
             headers: {
@@ -202,8 +188,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
         const data = await res.json();
         setChatHistory(data?.data);
-
-        console.log("response =>", data.data);
       } catch (error) {
         console.error("Error fetching chat titles:", error);
       }
@@ -219,7 +203,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   }, [chatToEdit]);
 
-  console.log("chat hisrot", chatHistory);
+  const onResetHandle = () => {
+    resetPage();
+    setResetHeading(true);
+    if (isMobile) toggleSidebar();
+  };
 
   return (
     <>
@@ -259,7 +247,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         isCollapsed
                           ? "justify-center p-2.5 h-10 w-full"
                           : "justify-center p-2.5 h-10 flex-1",
-                        isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
+                        isMobile && !isCollapsed ? "text-xs p-2 h-9" : "text-xs"
                       )}
                       onClick={toggleSidebar}
                     >
@@ -277,7 +265,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           : "justify-start p-2.5 h-10 flex-1",
                         isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
                       )}
-                      onClick={resetPage}
+                      onClick={onResetHandle}
                       asChild
                     >
                       <Link href="/">
@@ -311,7 +299,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 >
                   {chatHistory &&
                     Object.entries(chatHistory)
-                      .filter(([, chats]) => chats.length > 0) // Filter out empty sections
+                      .filter(([, chats]) => chats.length > 0)
                       .map(([section, chats]) => (
                         <div key={section}>
                           {/* Section Header */}
@@ -335,7 +323,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                     isMobile ? "py-1.5" : "py-2"
                                   )}
                                   onClick={() => {
-                                    console.log("chat details", chat);
                                     setSelectedChatId(chat?.chat_id);
                                     if (isMobile) toggleSidebar();
                                   }}
@@ -376,7 +363,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                           title: chat.chat_title,
                                         });
                                         setOpenPopoverId(null);
-                                        // Close the popover when edit is clicked
                                         if (isMobile) toggleSidebar();
                                       }}
                                     >
@@ -390,7 +376,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                           title: chat.chat_title,
                                         });
                                         setOpenPopoverId(null);
-                                        // Close the popover when delete is clicked
                                         if (isMobile) toggleSidebar();
                                       }}
                                     >
@@ -413,12 +398,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarFooter
           className={cn("px-4 pb-4", isMobile ? "px-2 pb-2" : "px-4 pb-4")}
         >
-          {/* <SidebarFooter className={cn("px-4 pb-4", isMobile ? "px-2 pb-2" : "px-4 pb-4")} /> */}
-
           {/* Dotted Line Separator */}
           <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-2" />
 
-          {/* Footer buttons container - row when expanded, column when collapsed */}
           <div
             className={cn(
               "flex gap-3 transition-all duration-200",
@@ -435,7 +417,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center cursor-pointer",
                     isCollapsed
                       ? "justify-center p-2.5 h-10 w-full"
-                      : "justify-start p-2.5 h-10 flex-1",
+                      : "justify-center p-2.5 h-10 flex-1",
                     isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
                   )}
                   onClick={() => console.log("Settings clicked")}
@@ -457,7 +439,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 className="w-50 p-0"
               >
                 <div className="flex flex-col p-2">
-                  {/* Help */}
                   <Link
                     href="/profile"
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
@@ -465,7 +446,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <CircleHelp className="w-4 h-4" />
                     <span>Help</span>
                   </Link>
-                  {/* Privacy Policy */}
                   <Link
                     href="/profile"
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
@@ -473,7 +453,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     <ShieldCheck className="w-4 h-4" />
                     <span>Privacy Policy</span>
                   </Link>
-                  {/* Terms of use */}
                   <Link
                     href="/profile"
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
@@ -494,7 +473,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     "rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-800 flex items-center cursor-pointer",
                     isCollapsed
                       ? "justify-center p-2.5 h-10 w-full"
-                      : "justify-start p-2.5 h-10 flex-1",
+                      : "justify-center p-2.5 h-10 flex-1",
                     isMobile && !isCollapsed ? "text-xs p-2 h-9" : ""
                   )}
                 >
@@ -524,7 +503,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </Link>
 
                   <button
-                    className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors text-left"
+                    className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors text-left cursor-pointer"
                     onClick={handleLogout}
                   >
                     <LogOut className="w-4 h-4" />
@@ -543,13 +522,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {chatToDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            {/* Icon + Text Container */}
             <div className="flex flex-col items-center mb-4">
-              {/* Centered Alert Icon */}
               <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
                 <AlertTriangle className="w-8 h-8 text-red-500" />
               </div>
-              {/* Title */}
               <h3 className="text-lg font-medium mt-4 text-center">
                 Are you sure?
               </h3>
@@ -635,7 +611,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   );
 }
 
-// Add this at the end of the file
 export function SidebarWrapper({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
