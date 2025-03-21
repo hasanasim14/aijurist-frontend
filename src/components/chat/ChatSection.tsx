@@ -17,6 +17,7 @@ import Image from "next/image";
 import { Send, Paperclip, ScrollText, Menu } from "lucide-react";
 import { useApiContext } from "@/context/APIContext";
 import ChatAnchorLinks from "./ChatAnchorLink";
+import Header from "./Header";
 
 interface ChatSectionProps {
   onChatDataChange?: (hasChatData: boolean) => void;
@@ -41,6 +42,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const [questionId, setQuestionID] = useState(1);
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasChatContent, setHasChatContent] = useState(false);
+  const [check, setCheck] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -141,6 +143,8 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
     fetchPastChats();
     // Reset current messages when changing chats
     setCurrentMessages([]);
+    // Reset the check state when changing chats
+    setCheck(true);
   }, [selectedChatId, onChatDataChange]);
 
   // Scroll to bottom when messages change
@@ -320,9 +324,8 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      setCheck(false);
       sendMessage();
-      // setTimeout();
-      setResetHeading(false);
     }
   };
 
@@ -425,6 +428,9 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative">
+      {/* Header */}
+      {check && <Header />}
+
       {/* Chat Container */}
       <div
         ref={chatContainerRef}
