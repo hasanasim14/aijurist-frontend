@@ -19,9 +19,9 @@ import { useApiContext } from "@/context/APIContext";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 
-interface ChatSectionProps {
-  onChatDataChange?: (hasChatData: boolean) => void;
-}
+// interface ChatSectionProps {
+//   onChatDataChange?: (hasChatData: boolean) => void;
+// }
 
 interface ChatMessage {
   user_query?: string | object;
@@ -30,8 +30,12 @@ interface ChatMessage {
   content?: string;
 }
 
-const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
-  const { selectedChatId, setResetHeading } = useChatContext();
+const ChatSection = () => {
+  const {
+    selectedChatId,
+    // , setResetHeading
+    resetPageTrigger,
+  } = useChatContext();
   const { setShouldCallApi } = useApiContext();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
@@ -42,7 +46,9 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const [questionId, setQuestionID] = useState(1);
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasChatContent, setHasChatContent] = useState(false);
-  const [check, setCheck] = useState(true);
+  // Initialize showHeading to true and ensure it stays visible initially
+  const [showHeading, setShowHeading] = useState(true);
+  const initialRenderRef = useRef(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -65,6 +71,12 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
     setHasChatContent(pastChat.length > 0 || currentMessages.length > 0);
   }, [pastChat, currentMessages]);
 
+  // Reset Page trigger
+  useEffect(() => {
+    console.log("Page reset");
+    setShowHeading((prevState) => true);
+  }, [resetPageTrigger]);
+
   // Fetch past chats when selectedChatId changes
   useEffect(() => {
     setChatId(selectedChatId);
@@ -73,7 +85,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       const token = localStorage.getItem("authToken");
       if (!selectedChatId) {
         setPastChat([]);
-        if (onChatDataChange) onChatDataChange(false);
+        // if (onChatDataChange) onChatDataChange(false);
         return;
       }
 
@@ -109,9 +121,9 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         setPastChat(processedPastChat);
 
         // Notify parent component about chat data status
-        if (onChatDataChange) {
-          onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
-        }
+        // if (onChatDataChange) {
+        //   onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
+        // }
 
         // If we have past chat data, we should also get the latest thread_id and question_id
         if (Array.isArray(data.data) && data.data.length > 0) {
@@ -134,18 +146,26 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
       } catch (error) {
         console.error("Error fetching chat", error);
         setPastChat([]);
-        if (onChatDataChange) {
-          onChatDataChange(false);
-        }
+        // if (onChatDataChange) {
+        //   onChatDataChange(false);
+        // }
       }
     };
 
     fetchPastChats();
     // Reset current messages when changing chats
     setCurrentMessages([]);
-    // Reset the check state when changing chats
-    setCheck(true);
-  }, [selectedChatId, onChatDataChange]);
+
+    // Only hide the heading if it's not the initial render and there's a selectedChatId
+    if (!initialRenderRef.current && selectedChatId) {
+      setShowHeading(false);
+    }
+    // Mark that initial render is complete
+    initialRenderRef.current = false;
+  }, [
+    selectedChatId,
+    // , onChatDataChange
+  ]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -324,7 +344,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      setCheck(false);
+      setShowHeading((prevState) => false);
       sendMessage();
     }
   };
@@ -428,14 +448,12 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
-      {/* Header */}
-
       {/* Chat Container */}
       <div
         ref={chatContainerRef}
         className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto"
       >
-        {check && <Header />}
+        {showHeading && <Header />}
 
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto pb-20 px-4 md:px-6">
