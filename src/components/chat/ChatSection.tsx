@@ -91,18 +91,18 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
         // Process the past chat data to include API responses
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const processedPastChat = data.data.flatMap((chat: any) => {
-          return [
-            {
-              role: "user",
-              content: chat.user_query,
-            },
-            {
-              role: "assistant",
-              content: chat.llm_response,
-            },
-          ];
-        });
+        const processedPastChat = Array.isArray(data?.data)
+          ? data.data.flatMap((chat: any) => [
+              {
+                role: "user",
+                content: chat.user_query,
+              },
+              {
+                role: "assistant",
+                content: chat.llm_response,
+              },
+            ])
+          : [];
 
         setPastChat(processedPastChat);
 
@@ -502,8 +502,9 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
             <div className="flex gap-2">
               <Dialog>
                 <DialogTrigger asChild>
-                  <span className="flex items-center gap-1 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
+                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
                     <Paperclip size={18} className="text-gray-600" />
+                    Upload Documents
                   </span>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
@@ -518,8 +519,9 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
 
               <Dialog>
                 <DialogTrigger asChild>
-                  <span className="flex items-center gap-1 px-3 py-2 rounded-full bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
+                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
                     <ScrollText size={18} className="text-gray-600" />
+                    Summarise Documents
                   </span>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[425px]">
