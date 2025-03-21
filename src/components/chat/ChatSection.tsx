@@ -427,15 +427,16 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
   const allMessages = [...pastChat, ...currentMessages];
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full relative">
+    <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
       {/* Header */}
-      {check && <Header />}
 
       {/* Chat Container */}
       <div
         ref={chatContainerRef}
-        className="flex-1 flex flex-col h-full overflow-hidden relative"
+        className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto"
       >
+        {check && <Header />}
+
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto pb-20 px-4 md:px-6">
           {/* Past Chat Messages */}
@@ -483,7 +484,7 @@ const ChatSection = ({ onChatDataChange }: ChatSectionProps) => {
         </div>
 
         {/* Input Area */}
-        <div className="fixed bottom-4 w-full max-w-sm md:max-w-2xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center">
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm md:max-w-2xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center">
           <div className="w-full relative">
             <textarea
               ref={textareaRef}
