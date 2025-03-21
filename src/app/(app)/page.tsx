@@ -81,23 +81,22 @@ export default function ChatUI() {
             Use one of the most common prompts below or use your own to begin
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 w-full max-w-5xl mx-auto">
-            {[1, 2, 3, 4].map((item, index) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-5xl mx-auto">
+            {[1, 2, 3].map((item, index) => {
               const Icon = icons[index % icons.length];
               return (
                 <Card
                   key={item}
-                  className="flex flex-col items-center p-3 sm:p-3 shadow-md rounded-xl bg-white dark:bg-gray-800 h-full"
+                  className="flex flex-col items-center p-4 shadow-md rounded-xl bg-white dark:bg-gray-800 h-full flex-grow"
                 >
                   <Icon
-                    size={32}
-                    className="text-gray-600 dark:text-gray-400 mb-2"
+                    size={36}
+                    className="text-gray-600 dark:text-gray-400 mb-3"
+                    aria-label={`Icon for Card ${item}`}
                   />
-                  <CardContent className="text-center p-1 sm:p-2 w-full">
-                    <h3 className="text-lg sm:text-lg font-semibold">
-                      Card {item}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500">
+                  <CardContent className="text-center p-2 w-full">
+                    <h3 className="text-lg font-semibold">Card {item}</h3>
+                    <p className="text-sm text-gray-500">
                       This is a sample text for card {item}.
                     </p>
                   </CardContent>

@@ -196,12 +196,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     fetchChatTitles();
   }, [shouldCallApi]);
 
-  // Set the new chat title when a chat is selected for editing
+  // Set the new chat title when a chat is selected for editing - with memoization
   useEffect(() => {
     if (chatToEdit) {
       setNewChatTitle(chatToEdit.title);
     }
-  }, [chatToEdit]);
+  }, [chatToEdit?.id]); // Only depend on the ID, not the entire object
 
   const onResetHandle = () => {
     resetPage();
@@ -575,13 +575,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </label>
               <Input
                 id="chat-title"
-                value={newChatTitle}
-                onChange={(e) => setNewChatTitle(e.target.value)}
+                defaultValue={chatToEdit.title}
+                onChange={(e) => {
+                  // Use direct DOM value instead of state for rendering
+                  setNewChatTitle(e.target.value);
+                }}
                 placeholder="Enter new chat title"
                 className="w-full"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && newChatTitle.trim()) {
+                  if (e.key === "Enter" && e.currentTarget.value.trim()) {
                     handleEditChat();
                   }
                 }}
