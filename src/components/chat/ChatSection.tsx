@@ -18,6 +18,8 @@ import { Send, Paperclip, ScrollText, Menu } from "lucide-react";
 import { useApiContext } from "@/context/APIContext";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
+import { Button } from "../ui/button";
+import CaseRef from "./CaseRef";
 
 // interface ChatSectionProps {
 //   onChatDataChange?: (hasChatData: boolean) => void;
@@ -436,6 +438,8 @@ const ChatSection = () => {
             {/* Response Text */}
             <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap">
               {displayContent}
+              {/* <CaseRef/> */}
+              {/* <Button>Case Ref</Button> */}
             </div>
           </div>
         )}
