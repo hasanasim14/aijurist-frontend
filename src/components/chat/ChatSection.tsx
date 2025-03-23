@@ -18,8 +18,6 @@ import { Send, Paperclip, ScrollText, Menu } from "lucide-react";
 import { useApiContext } from "@/context/APIContext";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
-import { Button } from "../ui/button";
-import CaseRef from "./CaseRef";
 
 // interface ChatSectionProps {
 //   onChatDataChange?: (hasChatData: boolean) => void;
@@ -407,7 +405,7 @@ const ChatSection = () => {
     return (
       <div
         key={index}
-        className="flex flex-col space-y-4 transition-colors duration-300"
+        className="flex flex-col space-y-2 transition-colors duration-300"
         ref={
           isUserMessage
             ? (el) => {
@@ -452,10 +450,11 @@ const ChatSection = () => {
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
+      {/* <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl ml-2 mr-auto"> */}
       {/* Chat Container */}
       <div
         ref={chatContainerRef}
-        className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto"
+        className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16"
       >
         {showHeading && <Header />}
 
@@ -504,9 +503,8 @@ const ChatSection = () => {
           {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
         </div>
-
         {/* Input Area */}
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-sm md:max-w-2xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center">
+        <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
           <div className="w-full relative">
             <textarea
               ref={textareaRef}
@@ -593,7 +591,7 @@ const ChatSection = () => {
 
           {/* Mobile Sidebar */}
           <div
-            className={`fixed inset-0 bg-white z-10 transition-transform duration-300 md:hidden ${
+            className={`fixed inset-0 bg-white z-30 transition-transform duration-300 md:hidden ${
               showSidebar ? "translate-x-0" : "translate-x-full"
             }`}
           >
@@ -616,7 +614,7 @@ const ChatSection = () => {
           </div>
 
           {/* Desktop Sidebar */}
-          <div className="hidden md:block">
+          <div className="hidden md:block fixed top-20 right-6 w-50">
             <ChatAnchorLinks
               messages={allMessages}
               onLinkClick={scrollToMessage}
