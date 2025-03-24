@@ -443,7 +443,7 @@ const ChatSection = () => {
               {displayContent}
 
               {/* Only show CaseRef when lookup data exists */}
-              {hasLookupData && <CaseRef lookupData={message.lookup} />}
+              {hasLookupData && <CaseRef lookupData={message} />}
             </div>
           </div>
         )}
