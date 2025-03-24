@@ -1,3 +1,4 @@
+// Break into components
 "use client";
 
 import type React from "react";
@@ -13,29 +14,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import Image from "next/image";
 import { Send, Paperclip, ScrollText, Menu } from "lucide-react";
 import { useApiContext } from "@/context/APIContext";
+import { CaseRef } from "./CaseRef";
+import Image from "next/image";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 
-// interface ChatSectionProps {
-//   onChatDataChange?: (hasChatData: boolean) => void;
-// }
-
+// Update the ChatMessage interface to include the lookup property
 interface ChatMessage {
   user_query?: string | object;
   llm_response?: string | object;
   role?: string;
   content?: string;
+  lookup?: any;
 }
 
 const ChatSection = () => {
-  const {
-    selectedChatId,
-    // , setResetHeading
-    resetPageTrigger,
-  } = useChatContext();
+  const { selectedChatId, resetPageTrigger } = useChatContext();
   const { setShouldCallApi } = useApiContext();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
@@ -46,7 +42,6 @@ const ChatSection = () => {
   const [questionId, setQuestionID] = useState(1);
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasChatContent, setHasChatContent] = useState(false);
-  // Initialize showHeading to true and ensure it stays visible initially
   const [showHeading, setShowHeading] = useState(true);
   const initialRenderRef = useRef(true);
 
@@ -114,6 +109,7 @@ const ChatSection = () => {
               {
                 role: "assistant",
                 content: chat.llm_response,
+                lookup: chat.lookup, // Include the lookup data from the API response
               },
             ])
           : [];
@@ -247,8 +243,9 @@ const ChatSection = () => {
       }
 
       const data = await res.json();
+      console.log("API response:", data);
 
-      // Add AI response to current messages
+      // In the sendMessage function, make sure to include the lookup data when adding AI response
       setCurrentMessages((prev) => [
         ...prev,
         {
@@ -257,6 +254,7 @@ const ChatSection = () => {
             data.data && data.data.llm_response
               ? data.data.llm_response
               : formatApiResponse(data),
+          lookup: data.data?.lookup, // Add the lookup data from the API response
         },
       ]);
 
@@ -354,7 +352,7 @@ const ChatSection = () => {
     setShowSidebar(!showSidebar);
   };
 
-  // Replace the renderMessage function with this improved version
+  // Update the renderMessage function to conditionally render CaseRef
   const renderMessage = (message: ChatMessage, index: number) => {
     // Ensure message is defined
     if (!message) {
@@ -376,6 +374,13 @@ const ChatSection = () => {
       typeof content === "object"
         ? JSON.stringify(content)
         : String(content || "");
+
+    // Check if lookup data exists in the message and is not empty
+    const hasLookupData =
+      !isUserMessage &&
+      message.lookup &&
+      typeof message.lookup === "object" &&
+      Object.keys(message.lookup).length > 0;
 
     // For user messages, calculate the correct index among all user messages
     let userMessageIndex = -1;
@@ -436,8 +441,9 @@ const ChatSection = () => {
             {/* Response Text */}
             <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap">
               {displayContent}
-              {/* <CaseRef/> */}
-              {/* <Button>Case Ref</Button> */}
+
+              {/* Only show CaseRef when lookup data exists */}
+              {hasLookupData && <CaseRef lookupData={message.lookup} />}
             </div>
           </div>
         )}
