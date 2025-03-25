@@ -20,7 +20,7 @@ import {
   ThumbsUp,
   X,
 } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -38,29 +38,40 @@ interface CaseDetails {
   parties: string;
   citation: string;
   year: string;
+  highlightVectors?: string[];
+  displayText?: string[];
 }
 
 export function CaseRef({ lookupData }: any) {
-  // const [selectedCase, setSelectedCase] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [caseDetails, setCaseDetails] = useState<CaseDetails>();
   const [isLoading, setIsLoading] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
-  const dialogRef = useRef(null);
-  console.log("lookupData", lookupData);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+
     const handleScroll = () => {
       if (dialogRef.current) {
-        setShowBackToTop(dialogRef.current.scrollTop > 100);
+        const shouldShow = dialogRef.current.scrollTop > 100;
+
+        if (!shouldShow && showBackToTop) {
+          if (timeoutId) clearTimeout(timeoutId);
+
+          timeoutId = setTimeout(() => {
+            setShowBackToTop(false);
+          }, 300);
+        } else if (shouldShow) {
+          setShowBackToTop(true);
+        }
       }
     };
 
     const currentDialog = dialogRef.current;
     if (currentDialog) {
       currentDialog.addEventListener("scroll", handleScroll);
-      // Initial check
       handleScroll();
     }
 
@@ -68,18 +79,16 @@ export function CaseRef({ lookupData }: any) {
       if (currentDialog) {
         currentDialog.removeEventListener("scroll", handleScroll);
       }
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isDialogOpen, dialogRef.current]);
+  }, [isDialogOpen, showBackToTop]);
 
   const handleViewDetails = async (caseItem: any) => {
-    console.log("The case item is ", caseItem);
-    // setSelectedCase(caseItem);
     setIsLoading(true);
     setIsDialogOpen(true);
 
     const token = localStorage.getItem("authToken");
     try {
-      // Replace with your actual API endpoint
       const response = await fetch(
         process.env.NEXT_PUBLIC_BASE_URL2 + "/describe_t4",
         {
@@ -89,7 +98,7 @@ export function CaseRef({ lookupData }: any) {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            vector_ids: ["6569,v_id24", "6569,v_id5"],
+            vector_ids: caseItem.vectorIDs,
             flag: false,
           }),
         }
@@ -97,12 +106,9 @@ export function CaseRef({ lookupData }: any) {
       if (!response.ok) {
         throw new Error("Failed to fetch case details");
       }
-      const data = await response.json();
-      console.log("Raw API response:", data);
 
-      // Process the nested data structure
+      const data = await response.json();
       if (data && data.data) {
-        // Extract the first key from the data object (e.g., "6569")
         const firstKey = Object.keys(data.data)[0];
         if (firstKey && data.data[firstKey]) {
           // Format the case details properly
@@ -114,6 +120,8 @@ export function CaseRef({ lookupData }: any) {
             parties: data.data[firstKey].parties || "",
             citation: data.data[firstKey].citation || "",
             year: data.data[firstKey].year || "",
+            highlightVectors: data.data[firstKey].highlightVectors || [],
+            displayText: data.data[firstKey].displayText || [],
           });
         }
       }
@@ -133,13 +141,33 @@ export function CaseRef({ lookupData }: any) {
       });
     }
   };
+
+  const highlightJudgment = (judgment: string, highlightVectors?: string[]) => {
+    if (!highlightVectors || highlightVectors.length === 0) {
+      return { __html: judgment };
+    }
+
+    let highlightedJudgment = judgment;
+
+    highlightVectors.forEach((vector) => {
+      if (vector && highlightedJudgment.includes(vector)) {
+        highlightedJudgment = highlightedJudgment.replace(
+          vector,
+          `<mark class="bg-yellow-200 px-1 rounded font-bold italic">${vector}</mark>`
+        );
+      }
+    });
+
+    return { __html: highlightedJudgment };
+  };
+
   return (
     <>
       <Sheet>
         <SheetTrigger asChild>
           <Button
             variant="secondary"
-            className="bg-[#27272a] text-white hover:bg-[#212124]-800 cursor-pointer"
+            className="bg-[#27272a] text-white hover:bg-[#212124]-800 cursor-pointer px-2"
           >
             Case Ref <ArrowRight className="w-5 h-5" />
           </Button>
@@ -148,23 +176,8 @@ export function CaseRef({ lookupData }: any) {
           side="right"
           className="max-w-[500px] sm:max-w-[75%] w-full"
         >
-          {/* <SheetHeader> */}
-          {/* <SheetTitle>Are you absolutely sure?</SheetTitle> */}
-          {/* <SheetDescription>
-              This action cannot be undone. This will permanently delete your
-              account and remove your data from our servers.
-            </SheetDescription> */}
-          {/* </SheetHeader> */}
           <ScrollArea className="flex-1 px-6 overflow-y-auto">
             <div className="space-y-6 mt-4">
-              {/* Content */}
-              {/* <div className="space-y-2">
-                <h2 className="text-lg font-semibold">Request</h2>
-                <p className="text-sm text-muted-foreground">
-                  {drawerData.data.user_query}
-                </p>
-              </div> */}
-
               <div className="space-y-2">
                 <h2 className="text-lg font-semibold">Response</h2>
                 <p className="text-sm text-muted-foreground">
@@ -173,7 +186,6 @@ export function CaseRef({ lookupData }: any) {
               </div>
 
               <div className="space-y-2">
-                {/* <h2 className="text-lg font-semibold">Referenced Cases</h2> */}
                 <Accordion type="single" collapsible className="w-full">
                   {Object.keys(lookupData.lookup).map((key) => {
                     const caseItem = lookupData.lookup[key];
@@ -274,10 +286,12 @@ export function CaseRef({ lookupData }: any) {
       {/* More Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="min-w-[95%] h-[95%] p-0 gap-0 overflow-hidden">
+          {/* Empty dialog title to remove the error */}
+          <DialogTitle>{}</DialogTitle>
           {/* Close button */}
           <button
             onClick={() => setIsDialogOpen(false)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
@@ -304,19 +318,19 @@ export function CaseRef({ lookupData }: any) {
                   </div>
                 </div>
 
-                {/* Citation - Centered */}
+                {/* Citations */}
                 <div className="text-center space-y-2">
-                  <p className="text-lg font-medium">
+                  <p className="text-2xl font-bold">
                     Cited as: {caseDetails.citation || "N/A"}
                   </p>
                   <p className="text-xl font-semibold">
                     {caseDetails.court || "N/A"}
                   </p>
                   <p>{caseDetails.case_no || "N/A"}</p>
-                  <p className="font-medium uppercase">
+                  <p className="text-lg uppercase">
                     {caseDetails.judge || "N/A"}
                   </p>
-                  <p className="font-medium uppercase">
+                  <p className="text-lg uppercase">
                     {caseDetails.parties || "N/A"}
                   </p>
                 </div>
@@ -324,13 +338,14 @@ export function CaseRef({ lookupData }: any) {
                 {/* Divider */}
                 <hr className="border-t border-gray-300 my-4" />
 
-                {/* Judgment content */}
+                {/* Judgment */}
                 <div className="space-y-4">
                   <div
-                    className="text-sm"
-                    dangerouslySetInnerHTML={{
-                      __html: caseDetails.judgement || "No summary available",
-                    }}
+                    className="text-medium"
+                    dangerouslySetInnerHTML={highlightJudgment(
+                      caseDetails.judgement || "No summary available",
+                      caseDetails.highlightVectors
+                    )}
                   ></div>
                 </div>
               </div>
@@ -341,17 +356,25 @@ export function CaseRef({ lookupData }: any) {
             )}
           </div>
 
-          {/* Floating Back to Top Button */}
-          {showBackToTop && !isLoading && caseDetails && (
-            <Button
-              className="absolute bottom-6 right-6 rounded-full w-auto h-8 px-3 py-1 shadow-md z-10 bg-black hover:bg-gray-800 text-white text-xs flex items-center gap-1 cursor-pointer"
-              onClick={scrollToTop}
-              variant="secondary"
-            >
-              <span>Back to Top</span>
-              <ChevronUp className="h-3 w-3" />
-            </Button>
-          )}
+          {/* Back to Top Button */}
+          <div
+            className={`fixed bottom-6 right-6 z-10 transition-all duration-300 ease-in-out ${
+              showBackToTop
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-10 pointer-events-none"
+            }`}
+          >
+            {!isLoading && caseDetails && (
+              <Button
+                className="rounded-full w-auto h-8 px-3 py-1 shadow-md bg-black hover:bg-gray-800 text-white text-xs flex items-center gap-1 cursor-pointer"
+                onClick={scrollToTop}
+                variant="secondary"
+              >
+                <span>Back to Top</span>
+                <ChevronUp className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </>
