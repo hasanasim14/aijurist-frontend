@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import {
   Accordion,
@@ -6,11 +8,9 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
-// import { drawerData } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowRight,
-  ChevronRight,
   ChevronUp,
   Copy,
   Download,
@@ -18,29 +18,32 @@ import {
   RefreshCcw,
   ThumbsDown,
   ThumbsUp,
+  X,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetFooter,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+// Case Details Interface
+interface CaseDetails {
+  judgement: string;
+  court: string;
+  case_no: string;
+  judge: string;
+  parties: string;
+  citation: string;
+  year: string;
+}
+
 export function CaseRef({ lookupData }: any) {
-  const [selectedCase, setSelectedCase] = useState(null);
+  // const [selectedCase, setSelectedCase] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [caseDetails, setCaseDetails] = useState(null);
+  const [caseDetails, setCaseDetails] = useState<CaseDetails>();
   const [isLoading, setIsLoading] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
@@ -69,7 +72,8 @@ export function CaseRef({ lookupData }: any) {
   }, [isDialogOpen, dialogRef.current]);
 
   const handleViewDetails = async (caseItem: any) => {
-    setSelectedCase(caseItem);
+    console.log("The case item is ", caseItem);
+    // setSelectedCase(caseItem);
     setIsLoading(true);
     setIsDialogOpen(true);
 
@@ -94,7 +98,26 @@ export function CaseRef({ lookupData }: any) {
         throw new Error("Failed to fetch case details");
       }
       const data = await response.json();
-      setCaseDetails(data.data);
+      console.log("Raw API response:", data);
+
+      // Process the nested data structure
+      if (data && data.data) {
+        // Extract the first key from the data object (e.g., "6569")
+        const firstKey = Object.keys(data.data)[0];
+        if (firstKey && data.data[firstKey]) {
+          // Format the case details properly
+          setCaseDetails({
+            judgement: data.data[firstKey].Judgement || "",
+            court: data.data[firstKey].court || "",
+            case_no: data.data[firstKey].case_no || "",
+            judge: data.data[firstKey].judge || "",
+            parties: data.data[firstKey].parties || "",
+            citation: data.data[firstKey].citation || "",
+            year: data.data[firstKey].year || "",
+          });
+        }
+      }
+      console.log("Formatted Case Details:", caseDetails);
     } catch (error) {
       console.error("Error fetching case details:", error);
     } finally {
@@ -114,7 +137,10 @@ export function CaseRef({ lookupData }: any) {
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" className="cursor-pointer">
+          <Button
+            variant="secondary"
+            className="bg-[#27272a] text-white hover:bg-[#212124]-800 cursor-pointer"
+          >
             Case Ref <ArrowRight className="w-5 h-5" />
           </Button>
         </SheetTrigger>
@@ -154,36 +180,35 @@ export function CaseRef({ lookupData }: any) {
                     return (
                       <AccordionItem key={key} value={key}>
                         <AccordionTrigger className="text-sm font-medium cursor-pointer">
-                          {caseItem[4]}
+                          {caseItem.Title} ({caseItem.id})
                         </AccordionTrigger>
                         <AccordionContent>
-                          <Card className="border-0 shadow-none">
-                            <CardContent className="p-3 space-y-2">
+                          <Card className="border-0 shadow-none p-0">
+                            <CardContent className="p-1 space-y-1 1/2">
                               <div className="grid grid-cols-[100px_1fr] gap-1">
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  Case Name
+                                <span className="text-s font-medium text-muted-foreground">
+                                  Court
                                 </span>
-                                <span className="text-xs">{caseItem[0]}</span>
+                                <span className="text-xs">
+                                  {caseItem.Court}
+                                </span>
                               </div>
                               <div className="grid grid-cols-[100px_1fr] gap-1">
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  Court:
+                                <span className="text-s font-medium text-muted-foreground">
+                                  Parties:
                                 </span>
-                                <span className="text-xs">{caseItem[0]}</span>
+                                <span className="text-xs">
+                                  {caseItem.Parties}
+                                </span>
                               </div>
                               <div className="grid grid-cols-[100px_1fr] gap-1">
                                 <span className="text-xs font-medium text-muted-foreground">
                                   Judge:
                                 </span>
-                                <span className="text-xs">{caseItem[5]}</span>
-                              </div>
-                              <div className="grid grid-cols-[100px_1fr] gap-1">
-                                <span className="text-xs font-medium text-muted-foreground">
-                                  Case ID:
+                                <span className="text-xs">
+                                  {caseItem.Judge}
                                 </span>
-                                <span className="text-xs">{key}</span>
                               </div>
-                              {/* View More Details */}
                               <div className="flex justify-end mt-2">
                                 <Button
                                   variant="outline"
@@ -192,7 +217,7 @@ export function CaseRef({ lookupData }: any) {
                                   onClick={() => handleViewDetails(caseItem)}
                                 >
                                   <ExternalLink className="h-3 w-3" />
-                                  View Details
+                                  View Case
                                 </Button>
                               </div>
                             </CardContent>
@@ -248,62 +273,83 @@ export function CaseRef({ lookupData }: any) {
 
       {/* More Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="min-w-[95%] h-[95%]">
-          <DialogHeader>
-            <DialogTitle className="text-xl">{}</DialogTitle>
-            <DialogDescription>{}</DialogDescription>
-          </DialogHeader>
+        <DialogContent className="min-w-[95%] h-[95%] p-0 gap-0 overflow-hidden">
+          {/* Close button */}
+          <button
+            onClick={() => setIsDialogOpen(false)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+          >
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </button>
 
-          <div ref={dialogRef} className="flex-1 overflow-y-auto">
+          <div ref={dialogRef} className="flex-1 overflow-y-auto p-6">
             {isLoading ? (
               <div className="flex justify-center items-center py-8">
-                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
               </div>
             ) : caseDetails ? (
-              <div className="space-y-4 py-4">
-                {/* Citation */}
-                <div className="grid grid-cols-[120px_1fr] gap-2">
-                  <span className="font-medium">Cited As:</span>
-                  <span>{}</span>
-                </div>
-                {/* Court Name */}
-                <div className="grid grid-cols-[120px_1fr] gap-2">
-                  <span className="font-medium">Court:</span>
-                  <span>{}</span>
-                </div>
-                {/* Case Number */}
-                <div className="grid grid-cols-[120px_1fr] gap-2">
-                  <span className="font-medium">Case Number:</span>
-                  <span>{}</span>
-                </div>
-                {/* Judge */}
-                <div className="grid grid-cols-[120px_1fr] gap-2">
-                  <span className="font-medium">Judge:</span>
-                  <span>{}</span>
-                </div>
-                {/* Parties */}
-                <div className="grid grid-cols-[120px_1fr] gap-2">
-                  <span className="font-medium">Parties:</span>
-                  <span>{}</span>
+              <div className="space-y-6">
+                {/* Logo and header */}
+                <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col items-center">
+                    <img
+                      src="sld-logo.png"
+                      alt="SLD Logo"
+                      className="h-25 mb-2"
+                    />
+                    <span className="text-sm text-muted-foreground text-center">
+                      Content & Citation by SLD
+                    </span>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">Summary</h3>
-                  <p className="text-sm">{}</p>
+                {/* Citation - Centered */}
+                <div className="text-center space-y-2">
+                  <p className="text-lg font-medium">
+                    Cited as: {caseDetails.citation || "N/A"}
+                  </p>
+                  <p className="text-xl font-semibold">
+                    {caseDetails.court || "N/A"}
+                  </p>
+                  <p>{caseDetails.case_no || "N/A"}</p>
+                  <p className="font-medium uppercase">
+                    {caseDetails.judge || "N/A"}
+                  </p>
+                  <p className="font-medium uppercase">
+                    {caseDetails.parties || "N/A"}
+                  </p>
+                </div>
+
+                {/* Divider */}
+                <hr className="border-t border-gray-300 my-4" />
+
+                {/* Judgment content */}
+                <div className="space-y-4">
+                  <div
+                    className="text-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: caseDetails.judgement || "No summary available",
+                    }}
+                  ></div>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="py-4 text-center text-muted-foreground">
+                No case details available
+              </div>
+            )}
           </div>
 
           {/* Floating Back to Top Button */}
           {showBackToTop && !isLoading && caseDetails && (
             <Button
-              className="absolute bottom-6 left-1/2 transform -translate-x-1/2 rounded-full w-10 h-10 p-0 shadow-md z-10"
+              className="absolute bottom-6 right-6 rounded-full w-auto h-8 px-3 py-1 shadow-md z-10 bg-black hover:bg-gray-800 text-white text-xs flex items-center gap-1 cursor-pointer"
               onClick={scrollToTop}
               variant="secondary"
             >
-              <ChevronUp className="h-5 w-5" />
-              <span className="sr-only">Back to top</span>
+              <span>Back to Top</span>
+              <ChevronUp className="h-3 w-3" />
             </Button>
           )}
         </DialogContent>
