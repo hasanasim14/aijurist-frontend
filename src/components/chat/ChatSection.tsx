@@ -439,11 +439,19 @@ const ChatSection = () => {
             </div>
 
             {/* Response Text */}
-            <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap">
+            <div
+              className={`relative p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap ${
+                hasLookupData ? "pb-16" : ""
+              }`}
+            >
               {displayContent}
 
               {/* Only show CaseRef when lookup data exists */}
-              {hasLookupData && <CaseRef lookupData={message} />}
+              {hasLookupData && (
+                <div className="absolute bottom-3 right-2">
+                  <CaseRef lookupData={message} />
+                </div>
+              )}
             </div>
           </div>
         )}
