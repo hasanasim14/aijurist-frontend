@@ -182,7 +182,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({ chat_id: "all" }),
+            body: JSON.stringify({ chat_id: "all", typeBin: "History" }),
           }
         );
 
