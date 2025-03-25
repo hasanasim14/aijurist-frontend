@@ -28,6 +28,7 @@ import {
   SheetFooter,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import Image from "next/image";
 
 // Case Details Interface
 interface CaseDetails {
@@ -42,6 +43,7 @@ interface CaseDetails {
   displayText?: string[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function CaseRef({ lookupData }: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [caseDetails, setCaseDetails] = useState<CaseDetails>();
@@ -83,6 +85,7 @@ export function CaseRef({ lookupData }: any) {
     };
   }, [isDialogOpen, showBackToTop]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleViewDetails = async (caseItem: any) => {
     setIsLoading(true);
     setIsDialogOpen(true);
@@ -307,7 +310,7 @@ export function CaseRef({ lookupData }: any) {
                 {/* Logo and header */}
                 <div className="flex flex-col space-y-2">
                   <div className="flex flex-col items-center">
-                    <img
+                    <Image
                       src="sld-logo.png"
                       alt="SLD Logo"
                       className="h-25 mb-2"

@@ -27,6 +27,7 @@ interface ChatMessage {
   llm_response?: string | object;
   role?: string;
   content?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lookup?: any;
 }
 
@@ -66,13 +67,11 @@ const ChatSection = () => {
     setHasChatContent(pastChat.length > 0 || currentMessages.length > 0);
   }, [pastChat, currentMessages]);
 
-  // Reset Page trigger
   useEffect(() => {
-    console.log("Page reset");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setShowHeading((prevState) => true);
   }, [resetPageTrigger]);
 
-  // Fetch past chats when selectedChatId changes
   useEffect(() => {
     setChatId(selectedChatId);
     console.log(chatId);
@@ -98,10 +97,9 @@ const ChatSection = () => {
         );
         const data = await res.json();
 
-        // Process the past chat data to include API responses
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const processedPastChat = Array.isArray(data?.data)
-          ? data.data.flatMap((chat: any) => [
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data.data.flatMap((chat: any) => [
               {
                 role: "user",
                 content: chat.user_query,
@@ -342,6 +340,7 @@ const ChatSection = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       setShowHeading((prevState) => false);
       sendMessage();
     }

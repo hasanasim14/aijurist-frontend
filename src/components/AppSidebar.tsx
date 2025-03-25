@@ -69,7 +69,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [openPopoverId, setOpenPopoverId] = useState<number | null>(null);
-  const { setSelectedChatId, resetPage, setResetHeading } = useChatContext();
+  const { setSelectedChatId, resetPage } = useChatContext();
   const { shouldCallApi } = useApiContext();
 
   const handleLogout = async () => {
@@ -196,16 +196,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     fetchChatTitles();
   }, [shouldCallApi]);
 
-  // Set the new chat title when a chat is selected for editing - with memoization
   useEffect(() => {
     if (chatToEdit) {
       setNewChatTitle(chatToEdit.title);
     }
-  }, [chatToEdit?.id]); // Only depend on the ID, not the entire object
+  }, [chatToEdit]);
 
   const onResetHandle = () => {
     resetPage();
-    setResetHeading(true);
     if (isMobile) toggleSidebar();
   };
 

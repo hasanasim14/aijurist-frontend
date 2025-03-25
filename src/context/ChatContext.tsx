@@ -7,8 +7,6 @@ type ChatContextType = {
   selectedChatId: number | string;
   setSelectedChatId: (id: number | string) => void;
   resetPage: () => void;
-  resetHeading: boolean;
-  setResetHeading: (reset: boolean) => void;
   resetPageTrigger: number;
 };
 
@@ -20,13 +18,11 @@ type ChatProviderProps = {
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
   const [selectedChatId, setSelectedChatId] = useState<number | string>("");
-  const [resetHeading, setResetHeading] = useState(true);
-  const [resetPageTrigger, setResetPageTrigger] = useState(0); // Increment this when reset happens
+  const [resetPageTrigger, setResetPageTrigger] = useState(0);
 
   const resetPage = () => {
     setSelectedChatId("");
-    // setResetHeading(false);
-    setResetPageTrigger((prev) => prev + 1); // Increment to signal reset
+    setResetPageTrigger((prev) => prev + 1);
   };
 
   return (
@@ -35,8 +31,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
         selectedChatId,
         setSelectedChatId,
         resetPage,
-        resetHeading,
-        setResetHeading,
         resetPageTrigger,
       }}
     >
