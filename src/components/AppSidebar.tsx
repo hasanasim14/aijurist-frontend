@@ -283,7 +283,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-1" />
+          <div className="border-t border-dotted border-gray-300 dark:border-gray-600" />
 
           {/* chat history */}
           {(!isCollapsed || isMobile) && (
@@ -438,21 +438,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               >
                 <div className="flex flex-col p-2">
                   <Link
-                    href="/profile"
+                    href="/help"
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
                   >
                     <CircleHelp className="w-4 h-4" />
                     <span>Help</span>
                   </Link>
                   <Link
-                    href="/profile"
+                    href="/privacy_policy"
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
                   >
                     <ShieldCheck className="w-4 h-4" />
                     <span>Privacy Policy</span>
                   </Link>
                   <Link
-                    href="/profile"
+                    href="/terms_of_use"
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-muted transition-colors"
                   >
                     <FileText className="w-4 h-4" />

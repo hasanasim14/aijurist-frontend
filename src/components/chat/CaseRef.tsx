@@ -15,6 +15,7 @@ import {
   Copy,
   Download,
   ExternalLink,
+  Eye,
   RefreshCcw,
   ThumbsDown,
   ThumbsUp,
@@ -53,87 +54,112 @@ export function CaseRef({ lookupData }: any) {
   const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    // Reset showBackToTop when dialog closes
+    if (!isDialogOpen) {
+      setShowBackToTop(false);
+      return;
+    }
+
+    let scrollCheckInterval: NodeJS.Timeout;
 
     const handleScroll = () => {
       if (dialogRef.current) {
         const shouldShow = dialogRef.current.scrollTop > 100;
-
-        if (!shouldShow && showBackToTop) {
-          if (timeoutId) clearTimeout(timeoutId);
-
-          timeoutId = setTimeout(() => {
-            setShowBackToTop(false);
-          }, 300);
-        } else if (shouldShow) {
-          setShowBackToTop(true);
-        }
+        setShowBackToTop(shouldShow);
       }
     };
 
-    const currentDialog = dialogRef.current;
-    if (currentDialog) {
-      currentDialog.addEventListener("scroll", handleScroll);
-      handleScroll();
-    }
+    // Function to set up scroll listener
+    const setupScrollListener = () => {
+      const currentDialog = dialogRef.current;
+      if (currentDialog) {
+        currentDialog.addEventListener("scroll", handleScroll);
+
+        // Force an initial check
+        handleScroll();
+
+        // Set up periodic checks for the first few seconds
+        // This helps when content loads dynamically
+        scrollCheckInterval = setInterval(() => {
+          handleScroll();
+        }, 500);
+
+        // Clear interval after 5 seconds
+        setTimeout(() => {
+          clearInterval(scrollCheckInterval);
+        }, 5000);
+      }
+    };
+
+    // Delay setup to ensure dialog is rendered
+    const setupTimeout = setTimeout(setupScrollListener, 300);
 
     return () => {
+      clearTimeout(setupTimeout);
+      clearInterval(scrollCheckInterval);
+
+      const currentDialog = dialogRef.current;
       if (currentDialog) {
         currentDialog.removeEventListener("scroll", handleScroll);
       }
-      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [isDialogOpen, showBackToTop]);
+  }, [isDialogOpen]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleViewDetails = async (caseItem: any) => {
     setIsLoading(true);
     setIsDialogOpen(true);
 
-    const token = localStorage.getItem("authToken");
-    try {
-      const response = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL2 + "/describe_t4",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            vector_ids: caseItem.vectorIDs,
-            flag: false,
-          }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch case details");
-      }
+    // Clear any existing case details to reset the view
+    setCaseDetails(undefined);
 
-      const data = await response.json();
-      if (data && data.data) {
-        const firstKey = Object.keys(data.data)[0];
-        if (firstKey && data.data[firstKey]) {
-          // Format the case details properly
-          setCaseDetails({
-            judgement: data.data[firstKey].Judgement || "",
-            court: data.data[firstKey].court || "",
-            case_no: data.data[firstKey].case_no || "",
-            judge: data.data[firstKey].judge || "",
-            parties: data.data[firstKey].parties || "",
-            citation: data.data[firstKey].citation || "",
-            year: data.data[firstKey].year || "",
-            highlightVectors: data.data[firstKey].highlightVectors || [],
-            displayText: data.data[firstKey].displayText || [],
-          });
+    // Small delay to ensure dialog is open before fetching
+    setTimeout(async () => {
+      const token = localStorage.getItem("authToken");
+      try {
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL2 + "/describe_t4",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              vector_ids: caseItem.vectorIDs,
+              flag: false,
+            }),
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch case details");
         }
+
+        const data = await response.json();
+        if (data && data.data) {
+          const firstKey = Object.keys(data.data)[0];
+          if (firstKey && data.data[firstKey]) {
+            // Format the case details properly
+            setCaseDetails({
+              judgement: data.data[firstKey].Judgement || "",
+              court: data.data[firstKey].court || "",
+              case_no: data.data[firstKey].case_no || "",
+              judge: data.data[firstKey].judge || "",
+              parties: data.data[firstKey].parties || "",
+              citation: data.data[firstKey].citation || "",
+              year: data.data[firstKey].year || "",
+              highlightVectors: data.data[firstKey].highlightVectors || [],
+              displayText: data.data[firstKey].displayText || [],
+            });
+          }
+        }
+        console.log("Formatted Case Details:", caseDetails);
+      } catch (error) {
+        console.error("Error fetching case details:", error);
+      } finally {
+        setIsLoading(false);
       }
-      console.log("Formatted Case Details:", caseDetails);
-    } catch (error) {
-      console.error("Error fetching case details:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    }, 100);
   };
 
   const scrollToTop = () => {
@@ -195,7 +221,23 @@ export function CaseRef({ lookupData }: any) {
                     return (
                       <AccordionItem key={key} value={key}>
                         <AccordionTrigger className="text-sm font-medium cursor-pointer">
-                          {caseItem.Title} ({caseItem.id})
+                          <div className="flex items-center justify-between w-full">
+                            <span>
+                              {caseItem.Title} ({caseItem.id})
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 ml-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDetails(caseItem);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="sr-only">View Case</span>
+                            </Button>
+                          </div>
                         </AccordionTrigger>
                         <AccordionContent>
                           <Card className="border-0 shadow-none p-0">
@@ -290,7 +332,7 @@ export function CaseRef({ lookupData }: any) {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="min-w-[95%] h-[95%] p-0 gap-0 overflow-hidden">
           {/* Empty dialog title to remove the error */}
-          <DialogTitle>{}</DialogTitle>
+          <DialogTitle> </DialogTitle>
           {/* Close button */}
           <button
             onClick={() => setIsDialogOpen(false)}
@@ -300,7 +342,10 @@ export function CaseRef({ lookupData }: any) {
             <span className="sr-only">Close</span>
           </button>
 
-          <div ref={dialogRef} className="flex-1 overflow-y-auto p-6">
+          <div
+            ref={dialogRef}
+            className="flex-1 overflow-y-auto p-6 select-none"
+          >
             {isLoading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
@@ -311,9 +356,11 @@ export function CaseRef({ lookupData }: any) {
                 <div className="flex flex-col space-y-2">
                   <div className="flex flex-col items-center">
                     <Image
-                      src="sld-logo.png"
+                      src="/sld-logo.png"
                       alt="SLD Logo"
                       className="h-25 mb-2"
+                      width={100}
+                      height={100}
                     />
                     <span className="text-sm text-muted-foreground text-center">
                       Content & Citation by SLD
@@ -361,20 +408,20 @@ export function CaseRef({ lookupData }: any) {
 
           {/* Back to Top Button */}
           <div
-            className={`fixed bottom-6 right-6 z-10 transition-all duration-300 ease-in-out ${
+            className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ease-in-out ${
               showBackToTop
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-10 pointer-events-none"
             }`}
           >
-            {!isLoading && caseDetails && (
+            {caseDetails && (
               <Button
-                className="rounded-full w-auto h-8 px-3 py-1 shadow-md bg-black hover:bg-gray-800 text-white text-xs flex items-center gap-1 cursor-pointer"
+                className="rounded-full w-auto h-10 px-4 py-2 shadow-lg bg-black hover:bg-gray-800 text-white text-sm flex items-center gap-2 cursor-pointer"
                 onClick={scrollToTop}
                 variant="secondary"
               >
                 <span>Back to Top</span>
-                <ChevronUp className="h-3 w-3" />
+                <ChevronUp className="h-4 w-4" />
               </Button>
             )}
           </div>

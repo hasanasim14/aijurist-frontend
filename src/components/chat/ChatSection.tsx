@@ -20,6 +20,8 @@ import { CaseRef } from "./CaseRef";
 import Image from "next/image";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
+import { useSidebar } from "../ui/sidebar";
+import { Button } from "../ui/button";
 
 // Update the ChatMessage interface to include the lookup property
 interface ChatMessage {
@@ -45,6 +47,8 @@ const ChatSection = () => {
   const [hasChatContent, setHasChatContent] = useState(false);
   const [showHeading, setShowHeading] = useState(true);
   const initialRenderRef = useRef(true);
+
+  const { state } = useSidebar();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -113,11 +117,6 @@ const ChatSection = () => {
           : [];
 
         setPastChat(processedPastChat);
-
-        // Notify parent component about chat data status
-        // if (onChatDataChange) {
-        //   onChatDataChange(Array.isArray(data.data) && data.data.length > 0);
-        // }
 
         // If we have past chat data, we should also get the latest thread_id and question_id
         if (Array.isArray(data.data) && data.data.length > 0) {
@@ -347,7 +346,7 @@ const ChatSection = () => {
   };
 
   // Toggle sidebar visibility (for mobile)
-  const toggleSidebar = () => {
+  const onToggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
@@ -422,7 +421,7 @@ const ChatSection = () => {
         id={anchorId}
       >
         {isUserMessage ? (
-          <div className="p-3 my-4 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
+          <div className="p-3 my-5 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
             {displayContent}
           </div>
         ) : (
@@ -461,18 +460,29 @@ const ChatSection = () => {
   // Combine past and current messages for the anchor links
   const allMessages = [...pastChat, ...currentMessages];
 
+  console.log("show sidebar", showSidebar);
+
+  console.log("sddasd", state);
+
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
       {/* <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl ml-2 mr-auto"> */}
       {/* Chat Container */}
       <div
         ref={chatContainerRef}
+        // className={`flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16 ${
+        //   state === "expanded" ? "md:pr-[18%]" : "md:pr-[8%]"
+        // }`}
         className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16"
       >
         {showHeading && <Header />}
 
         {/* Messages Container */}
-        <div className="flex-1 overflow-y-auto pb-20 px-4 md:px-6">
+        <div
+          className={`flex-1 overflow-y-auto pb-20 px-4 md:px-6 md:max-w-[95%] ${
+            state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"
+          }`}
+        >
           {/* Past Chat Messages */}
           {Array.isArray(pastChat) &&
             pastChat.length > 0 &&
@@ -482,6 +492,8 @@ const ChatSection = () => {
           {currentMessages.map((message, index) =>
             renderMessage(message, pastChat.length + index)
           )}
+
+          {/* <Button onClick={onToggleSidebar}>Onclick</Button> */}
 
           {/* Loading Indicator */}
           {isLoading && (
@@ -595,7 +607,7 @@ const ChatSection = () => {
         <>
           {/* Mobile Toggle Button for Anchor Links */}
           <button
-            onClick={toggleSidebar}
+            onClick={onToggleSidebar}
             className="md:hidden fixed top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md"
             aria-label="Toggle navigation"
           >
@@ -610,7 +622,7 @@ const ChatSection = () => {
           >
             <div className="p-4 h-full overflow-y-auto">
               <button
-                onClick={toggleSidebar}
+                onClick={onToggleSidebar}
                 className="absolute top-4 left-4 p-2"
                 aria-label="Close navigation"
               >
@@ -627,7 +639,7 @@ const ChatSection = () => {
           </div>
 
           {/* Desktop Sidebar */}
-          <div className="hidden md:block fixed top-20 right-6 w-50">
+          <div className="hidden md:block fixed top-20 right-6 w-64 max-w-[20%]">
             <ChatAnchorLinks
               messages={allMessages}
               onLinkClick={scrollToMessage}
