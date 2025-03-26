@@ -2,37 +2,90 @@
 
 import type React from "react";
 
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useEffect, useMemo, useState } from "react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-// import { Textarea } from "@/components/ui/textarea";
-// import { Badge } from "@/components/ui/badge";
-import { ChevronDown, Edit2, Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { cities, type User } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import toast from "react-hot-toast";
 
 export function Settings() {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    bio: "Product designer and developer based in San Francisco.",
-    phone: "+1 (555) 123-4567",
-    location: "San Francisco, CA",
+    name: "",
+    company: "",
+    city: "",
   });
-
+  const [storageUsage, setStorageUsage] = useState(10);
   const [tempUserData, setTempUserData] = useState({ ...userData });
+  const [user, setUser] = useState<User | null>(null);
 
   const handleEdit = () => {
-    setTempUserData({ ...userData });
+    setTempUserData({
+      name: `${user?.firstName ?? ""} ${user?.lastName ?? ""}`,
+      company: user?.companyName ?? "",
+      city: user?.city ?? "",
+    });
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setUserData({ ...tempUserData });
-    setIsEditing(false);
+  const handleSave = async () => {
+    const token = localStorage.getItem("authToken");
+    try {
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL2 + "/update_user_details",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            email: "hasan.asim14@gmail.com",
+            firstName: tempUserData.name.split(" ")[0],
+            lastName: tempUserData.name.split(" ").slice(1).join(" "),
+            companyName: tempUserData.company,
+            city: tempUserData.city,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Personal Information Updated Successfully!");
+      } else {
+        toast.error("Failed to Update Personal Information");
+      }
+
+      // Updating the user Information
+      if (user) {
+        const updatedUser = {
+          ...user,
+          firstName: tempUserData.name.split(" ")[0],
+          lastName: tempUserData.name.split(" ").slice(1).join(" "),
+          companyName: tempUserData.company,
+          city: tempUserData.city,
+        };
+        setUser(updatedUser);
+        sessionStorage.setItem("user", JSON.stringify(updatedUser));
+      }
+
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating user data:", error);
+    }
   };
 
   const handleCancel = () => {
@@ -48,6 +101,33 @@ export function Settings() {
     });
   };
 
+  useEffect(() => {
+    const userData = sessionStorage.getItem("user");
+    setUser(userData ? JSON.parse(userData) : null);
+  }, []);
+
+  const hasChanges = () => {
+    if (!user) return false;
+
+    const currentName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
+    const currentCompany = user.companyName ?? "";
+    const currentCity = user.city ?? "";
+
+    return (
+      tempUserData.name !== currentName ||
+      tempUserData.company !== currentCompany ||
+      tempUserData.city !== currentCity
+    );
+  };
+
+  const cityOptions = useMemo(() => {
+    return cities.map(({ label, value }) => (
+      <SelectItem key={value} value={value}>
+        {label}
+      </SelectItem>
+    ));
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -60,266 +140,226 @@ export function Settings() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card className="bg-[#f4f4f5] border border-gray-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xl font-bold">
-              Personal Information
-            </CardTitle>
-            {!isEditing ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleEdit}
-                className="h-8 w-8"
-              >
-                <Edit2 className="h-4 w-4" />
-              </Button>
-            ) : (
-              <div className="flex space-x-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSave}
-                  className="h-8 w-8 text-green-500"
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCancel}
-                  className="h-8 w-8 text-red-500"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <Avatar className="h-16 w-16 border-2 border-primary">
-                <AvatarImage
-                  src="/placeholder.svg?height=64&width=64"
-                  alt={userData.name}
-                />
-                <AvatarFallback className="bg-primary text-primary-foreground text-lg">
-                  {userData.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                {!isEditing ? (
-                  <div className="space-y-1">
-                    <h3 className="font-medium text-lg">{userData.name}</h3>
-                    <p className="text-sm text-gray-400">{userData.email}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div>
-                      <Label htmlFor="name" className="sr-only">
-                        Name
-                      </Label>
-                      <Input
-                        id="name"
-                        name="name"
-                        value={tempUserData.name}
-                        onChange={handleChange}
-                        className="bg-zinc-800 border-zinc-700"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email" className="sr-only">
-                        Email
-                      </Label>
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={tempUserData.email}
-                        onChange={handleChange}
-                        className="bg-zinc-800 border-zinc-700"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <Separator className="bg-zinc-800" />
-
-            {!isEditing ? (
-              <div className="space-y-3">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-400">Bio</h4>
-                  <p className="mt-1">{userData.bio}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-400">Phone</h4>
-                  <p className="mt-1">{userData.phone}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-400">
-                    Location
-                  </h4>
-                  <p className="mt-1">{userData.location}</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div>
-                  <Label
-                    htmlFor="bio"
-                    className="text-sm font-medium text-gray-400"
-                  >
-                    Bio
-                  </Label>
-                  {/* <Textarea
-                    id="bio"
-                    name="bio"
-                    value={tempUserData.bio}
-                    onChange={handleChange}
-                    className="mt-1 bg-zinc-800 border-zinc-700"
-                  /> */}
-                </div>
-                <div>
-                  <Label
-                    htmlFor="phone"
-                    className="text-sm font-medium text-gray-400"
-                  >
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={tempUserData.phone}
-                    onChange={handleChange}
-                    className="mt-1 bg-zinc-800 border-zinc-700"
-                  />
-                </div>
-                <div>
-                  <Label
-                    htmlFor="location"
-                    className="text-sm font-medium text-gray-400"
-                  >
-                    Location
-                  </Label>
-                  <Input
-                    id="location"
-                    name="location"
-                    value={tempUserData.location}
-                    onChange={handleChange}
-                    className="mt-1 bg-zinc-800 border-zinc-700"
-                  />
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
+        {/* First Column: Personal Information and Account */}
         <div className="space-y-6">
-          <Card className="bg-zinc-900 border-zinc-800">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">Subscription</CardTitle>
+          {/* Personal Information */}
+          <Card className="bg-[#f4f4f5] border border-gray-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xl font-bold">
+                Personal Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <h3 className="font-medium">Current Plan</h3>
-                    {/* <Badge
-                      variant="outline"
-                      className="bg-blue-900/20 text-blue-400 border-blue-800"
-                    > */}
-                    {/* Basic */}
-                    {/* </Badge> */}
-                  </div>
-                  <p className="text-sm text-gray-400">
-                    Your plan renews on April 21, 2025
-                  </p>
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-16 w-16 border-2 border-primary">
+                  <AvatarFallback>
+                    {`${user?.firstName ?? ""} ${user?.lastName ?? ""}`
+                      .trim()
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  {!isEditing ? (
+                    <div className="space-y-1">
+                      <h3 className="font-medium text-lg">{`${
+                        user?.firstName ?? ""
+                      } ${user?.lastName ?? ""}`}</h3>
+                      <p className="text-sm text-gray-400">{user?.email}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div>
+                        <Label htmlFor="name" className="sr-only">
+                          Name
+                        </Label>
+                        <Input
+                          id="name"
+                          name="name"
+                          value={tempUserData.name}
+                          onChange={handleChange}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <Button
-                  variant="outline"
-                  className="border-zinc-700 hover:bg-zinc-800"
-                >
-                  Manage
-                </Button>
               </div>
 
               <Separator className="bg-zinc-800" />
 
-              <div className="space-y-3">
-                <h3 className="font-medium">Plan Features</h3>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>5 projects</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>Up to 10 team members</span>
-                  </li>
-                  <li className="flex items-center">
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    <span>5GB storage</span>
-                  </li>
-                  <li className="flex items-center text-gray-500">
-                    <X className="h-4 w-4 mr-2" />
-                    <span>Advanced analytics</span>
-                  </li>
-                  <li className="flex items-center text-gray-500">
-                    <X className="h-4 w-4 mr-2" />
-                    <span>Priority support</span>
-                  </li>
-                </ul>
+              {!isEditing ? (
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400">
+                      Company
+                    </h4>
+                    <p className="mt-1">{user?.companyName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-400">City</h4>
+                    <p className="mt-1">{user?.city}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <Label
+                      htmlFor="company"
+                      className="text-sm font-medium text-gray-400"
+                    >
+                      Company
+                    </Label>
+                    <Input
+                      id="company"
+                      name="company"
+                      value={tempUserData.company}
+                      onChange={handleChange}
+                      className="mt-1 w-full"
+                    />
+                  </div>
+                  <div>
+                    <Label
+                      htmlFor="city"
+                      className="text-sm font-medium text-gray-400"
+                    >
+                      City
+                    </Label>
+                    <Select
+                      defaultValue={user?.city}
+                      name="city"
+                      // value={user?.city}
+                      onValueChange={(value) => {
+                        setTempUserData({
+                          ...tempUserData,
+                          city: value,
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a city" />
+                      </SelectTrigger>
+                      {/* <SelectGroup>{cityOptions}</SelectGroup> */}
+
+                      <SelectContent>
+                        <SelectGroup>{cityOptions}</SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+
+              {/* Add edit/save buttons at the end of the card */}
+              <div className="flex justify-end mt-4">
+                {!isEditing ? (
+                  <Button
+                    variant="outline"
+                    onClick={handleEdit}
+                    className="border border-gray-200 cursor-pointer"
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex space-x-4">
+                    <Button
+                      variant="outline"
+                      onClick={handleCancel}
+                      className="border border-gray-200 cursor-pointer"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      className="bg-primary hover:bg-primary/90 cursor-pointer"
+                      disabled={!hasChanges()}
+                    >
+                      Save
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-zinc-900 border-zinc-800">
+          {/* Account */}
+          <Card className="bg-[#f4f4f5] border border-gray-200">
             <CardHeader>
               <CardTitle className="text-xl font-bold">Account</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  {/* <h3 className="font-medium flex items-center">
-                    Basic Plan
-                    <Badge className="ml-2 bg-zinc-800 text-zinc-300">
-                      Active
-                    </Badge>
-                  </h3> */}
                   <p className="text-sm text-gray-400">
                     Free tier with limited features
                   </p>
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Plan Usage</span>
+                  <span className="font-medium">
+                    {storageUsage}% of 125 Messages
+                  </span>
+                </div>
+                <Progress value={storageUsage} className="h-2" />
+              </div>
+
               <div className="flex flex-wrap gap-2">
-                <Button className="bg-primary hover:bg-primary/90">
+                <Button className="bg-primary cursor-pointer">
                   Upgrade to Pro
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-zinc-700 hover:bg-zinc-800"
+                  className="border-zinc-700 cursor-pointer"
                 >
                   Upgrade to Business
-                </Button>
-              </div>
-
-              <div>
-                <Button
-                  variant="ghost"
-                  className="text-gray-400 hover:text-white p-0 h-auto flex items-center"
-                >
-                  Advanced
-                  <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Second Column: Subscription */}
+        <Card className="bg-[#f4f4f5] border border-gray-200">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold">
+              Subscription Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <h3 className="font-medium">Current Plan</h3>
+                  <Badge variant="outline" className="bg-black text-white">
+                    Basic
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            <Separator className="bg-zinc-800" />
+
+            <div className="space-y-3">
+              {/* <h3 className="font-medium">Plan Features</h3> */}
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center">
+                  <span className="font-bold">Started On:</span>
+                  {/* {start date} */}
+                </li>
+                <li className="flex items-center">
+                  <span className="font-bold">Expires On:</span>
+                  {/* {end date} */}
+                </li>
+                <li className="flex items-center">
+                  <span className="font-bold">Remaining Days:</span>
+                  {/* {} */}
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
