@@ -17,13 +17,11 @@ import {
 import { Send, Paperclip, ScrollText, Menu } from "lucide-react";
 import { useApiContext } from "@/context/APIContext";
 import { CaseRef } from "./CaseRef";
+import { useSidebar } from "../ui/sidebar";
 import Image from "next/image";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
-import { useSidebar } from "../ui/sidebar";
-import { Button } from "../ui/button";
 
-// Update the ChatMessage interface to include the lookup property
 interface ChatMessage {
   user_query?: string | object;
   llm_response?: string | object;
@@ -36,6 +34,7 @@ interface ChatMessage {
 const ChatSection = () => {
   const { selectedChatId, resetPageTrigger } = useChatContext();
   const { setShouldCallApi } = useApiContext();
+  const { state } = useSidebar();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -47,8 +46,6 @@ const ChatSection = () => {
   const [hasChatContent, setHasChatContent] = useState(false);
   const [showHeading, setShowHeading] = useState(true);
   const initialRenderRef = useRef(true);
-
-  const { state } = useSidebar();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -83,7 +80,6 @@ const ChatSection = () => {
       const token = localStorage.getItem("authToken");
       if (!selectedChatId) {
         setPastChat([]);
-        // if (onChatDataChange) onChatDataChange(false);
         return;
       }
 
@@ -111,16 +107,14 @@ const ChatSection = () => {
               {
                 role: "assistant",
                 content: chat.llm_response,
-                lookup: chat.lookup, // Include the lookup data from the API response
+                lookup: chat.lookup,
               },
             ])
           : [];
 
         setPastChat(processedPastChat);
 
-        // If we have past chat data, we should also get the latest thread_id and question_id
         if (Array.isArray(data.data) && data.data.length > 0) {
-          // Check if the API response includes these values
           if (data.data[data.data.length - 1]?.thread_id) {
             setThreadID(
               data.data.length > 0
@@ -139,28 +133,19 @@ const ChatSection = () => {
       } catch (error) {
         console.error("Error fetching chat", error);
         setPastChat([]);
-        // if (onChatDataChange) {
-        //   onChatDataChange(false);
-        // }
       }
     };
 
     fetchPastChats();
-    // Reset current messages when changing chats
     setCurrentMessages([]);
 
-    // Only hide the heading if it's not the initial render and there's a selectedChatId
     if (!initialRenderRef.current && selectedChatId) {
       setShowHeading(false);
     }
-    // Mark that initial render is complete
     initialRenderRef.current = false;
-  }, [
-    selectedChatId,
-    // , onChatDataChange
-  ]);
+  }, [selectedChatId]);
 
-  // Scroll to bottom when messages change
+  // Scroll to bottom when new messages are added
   useEffect(() => {
     scrollToBottom();
   }, [pastChat, currentMessages, isLoading]);
@@ -169,32 +154,21 @@ const ChatSection = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Replace the scrollToMessage function with this improved version
   const scrollToMessage = (index: number) => {
-    // Create the anchor ID
     const anchorId = `query-${index}`;
-
-    // Get the element reference
     const element = messageRefs.current[anchorId];
 
     if (element) {
-      // Scroll to the element
       element.scrollIntoView({ behavior: "smooth", block: "start" });
-
-      // Removed the highlighting code
     } else {
-      // Fallback: try to find the element by ID in the DOM
       const domElement = document.getElementById(anchorId);
       if (domElement) {
         domElement.scrollIntoView({ behavior: "smooth", block: "start" });
-
-        // Removed the highlighting code
       } else {
         console.log(`Element with ID ${anchorId} not found in DOM either`);
       }
     }
 
-    // Close sidebar on mobile after clicking
     if (window.innerWidth < 768) {
       setShowSidebar(false);
     }
@@ -208,14 +182,10 @@ const ChatSection = () => {
     setInput("");
     setIsLoading(true);
 
-    // Add user message to current messages
     setCurrentMessages((prev) => [
       ...prev,
       { role: "user", content: userQuery },
     ]);
-
-    // Wait for the state update to be reflected
-    // await new Promise((resolve) => setTimeout(resolve, 0));
 
     const token = localStorage.getItem("authToken");
 
@@ -228,7 +198,6 @@ const ChatSection = () => {
         },
         body: JSON.stringify({
           SearchQuery: userQuery,
-          // fcase: ["string"],
           chat_id: selectedChatId || "",
           p_thread_id: threadId,
           p_question_id: questionId,
@@ -240,9 +209,7 @@ const ChatSection = () => {
       }
 
       const data = await res.json();
-      console.log("API response:", data);
 
-      // In the sendMessage function, make sure to include the lookup data when adding AI response
       setCurrentMessages((prev) => [
         ...prev,
         {
@@ -251,7 +218,7 @@ const ChatSection = () => {
             data.data && data.data.llm_response
               ? data.data.llm_response
               : formatApiResponse(data),
-          lookup: data.data?.lookup, // Add the lookup data from the API response
+          lookup: data.data?.lookup,
         },
       ]);
 
@@ -265,7 +232,6 @@ const ChatSection = () => {
           setQuestionID(data.data.question_id);
         }
 
-        // If this is a new chat and we received a chat_id, update the context
         if (
           data.data.chat_id &&
           (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
@@ -274,7 +240,7 @@ const ChatSection = () => {
         }
       }
 
-      // Run another API based on conditions
+      // Generate heading api
       if (res.ok && selectedChatId === "") {
         const generateHeading = async () => {
           try {
@@ -293,12 +259,9 @@ const ChatSection = () => {
                 }),
               }
             );
-            // const anotherData = await anotherRes.json();
             if (anotherRes.ok) {
-              // const { setShouldCallApi } = useChatContext();
               setShouldCallApi(true);
             }
-            // Process another API data
           } catch (error) {
             console.error("Error running another API:", error);
           }
@@ -316,12 +279,10 @@ const ChatSection = () => {
       ]);
     } finally {
       setIsLoading(false);
-      // Focus the input field after sending
       inputRef.current?.focus();
     }
   };
 
-  // Handle input changes and auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
 
@@ -345,45 +306,36 @@ const ChatSection = () => {
     }
   };
 
-  // Toggle sidebar visibility (for mobile)
   const onToggleSidebar = () => {
     setShowSidebar(!showSidebar);
   };
 
-  // Update the renderMessage function to conditionally render CaseRef
   const renderMessage = (message: ChatMessage, index: number) => {
-    // Ensure message is defined
     if (!message) {
       console.error("Undefined message at index", index);
       return null;
     }
 
-    // Determine if it's a user message or AI response
     const isUserMessage =
       message.role === "user" || message.user_query !== undefined;
 
-    // Get the content based on message structure
     const content = isUserMessage
       ? message.content || message.user_query
       : message.content || message.llm_response;
 
-    // Format the content for display
     const displayContent =
       typeof content === "object"
         ? JSON.stringify(content)
         : String(content || "");
 
-    // Check if lookup data exists in the message and is not empty
     const hasLookupData =
       !isUserMessage &&
       message.lookup &&
       typeof message.lookup === "object" &&
       Object.keys(message.lookup).length > 0;
 
-    // For user messages, calculate the correct index among all user messages
     let userMessageIndex = -1;
     if (isUserMessage) {
-      // Count user messages up to this point
       userMessageIndex = 0;
       for (let i = 0; i < pastChat.length + currentMessages.length; i++) {
         const msg =
@@ -402,7 +354,6 @@ const ChatSection = () => {
       }
     }
 
-    // Create anchor ID for user messages
     const anchorId = isUserMessage ? `query-${userMessageIndex}` : "";
 
     return (
@@ -444,7 +395,6 @@ const ChatSection = () => {
             >
               {displayContent}
 
-              {/* Only show CaseRef when lookup data exists */}
               {hasLookupData && (
                 <div className="absolute bottom-3 right-2">
                   <CaseRef lookupData={message} />
@@ -460,19 +410,11 @@ const ChatSection = () => {
   // Combine past and current messages for the anchor links
   const allMessages = [...pastChat, ...currentMessages];
 
-  console.log("show sidebar", showSidebar);
-
-  console.log("sddasd", state);
-
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
-      {/* <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl ml-2 mr-auto"> */}
       {/* Chat Container */}
       <div
         ref={chatContainerRef}
-        // className={`flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16 ${
-        //   state === "expanded" ? "md:pr-[18%]" : "md:pr-[8%]"
-        // }`}
         className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16"
       >
         {showHeading && <Header />}
@@ -492,8 +434,6 @@ const ChatSection = () => {
           {currentMessages.map((message, index) =>
             renderMessage(message, pastChat.length + index)
           )}
-
-          {/* <Button onClick={onToggleSidebar}>Onclick</Button> */}
 
           {/* Loading Indicator */}
           {isLoading && (
@@ -525,15 +465,14 @@ const ChatSection = () => {
             </div>
           )}
 
-          {/* Invisible element to scroll to */}
           <div ref={messagesEndRef} />
         </div>
         {/* Input Area */}
-        <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
+        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[95%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-3 py-2 border flex flex-col items-center z-10">
           <div className="w-full relative">
             <textarea
               ref={textareaRef}
-              className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 placeholder-gray-500"
+              className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 pr-12 placeholder-gray-500"
               placeholder="Type a message..."
               value={input}
               onChange={handleInputChange}
@@ -547,57 +486,55 @@ const ChatSection = () => {
                 maxHeight: "160px",
               }}
             />
-          </div>
 
-          {/* Icons inside the input box */}
-          <div className="w-full flex justify-between items-center pt-2">
-            <div className="flex gap-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
-                    <Paperclip size={18} className="text-gray-600" />
-                    Upload Documents
-                  </span>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Upload Documents</DialogTitle>
-                    <DialogDescription>
-                      Add your documents here.
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog>
-                <DialogTrigger asChild>
-                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
-                    <ScrollText size={18} className="text-gray-600" />
-                    Summarise Documents
-                  </span>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Summary Cases</DialogTitle>
-                    <DialogDescription>
-                      Choose a case to summarize them.
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            {/* Send Button */}
+            {/* Send Button positioned inside the input area */}
             <button
               onClick={sendMessage}
-              className={`p-2 rounded-full transition-colors ${
+              className={`absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${
                 input.trim()
                   ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
                   : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               }`}
             >
-              <Send size={18} className="m-1" />
+              <Send size={18} className="m-0.5" />
             </button>
+          </div>
+
+          {/* Document buttons */}
+          <div className="w-full flex justify-start items-center gap-2 pt-2 overflow-x-auto pb-1">
+            <Dialog>
+              <DialogTrigger asChild>
+                <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
+                  <Paperclip size={16} className="text-gray-600" />
+                  <span className="text-sm">Upload Documents</span>
+                </span>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Upload Documents</DialogTitle>
+                  <DialogDescription>
+                    Add your documents here.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
+                  <ScrollText size={16} className="text-gray-600" />
+                  <span className="text-sm">Summarise Documents</span>
+                </span>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Summary Cases</DialogTitle>
+                  <DialogDescription>
+                    Choose a case to summarize them.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </div>
