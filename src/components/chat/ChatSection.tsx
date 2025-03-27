@@ -21,6 +21,7 @@ import { useSidebar } from "../ui/sidebar";
 import Image from "next/image";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
+import { SummarizeDocuments } from "./SummarizeDocuments";
 
 interface ChatMessage {
   user_query?: string | object;
@@ -468,11 +469,11 @@ const ChatSection = () => {
           <div ref={messagesEndRef} />
         </div>
         {/* Input Area */}
-        <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-[95%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-3 py-2 border flex flex-col items-center z-10">
+        <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
           <div className="w-full relative">
             <textarea
               ref={textareaRef}
-              className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 pr-12 placeholder-gray-500"
+              className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 placeholder-gray-500"
               placeholder="Type a message..."
               value={input}
               onChange={handleInputChange}
@@ -486,55 +487,59 @@ const ChatSection = () => {
                 maxHeight: "160px",
               }}
             />
+          </div>
 
-            {/* Send Button positioned inside the input area */}
+          {/* Icons inside the input box */}
+          <div className="w-full flex justify-between items-center pt-2">
+            <div className="flex gap-2">
+              <Dialog>
+                <DialogTrigger asChild>
+                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
+                    <Paperclip size={18} className="text-gray-600" />
+                    Upload Documents
+                  </span>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Upload Documents</DialogTitle>
+                    <DialogDescription>
+                      Add your documents here.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog>
+
+              <SummarizeDocuments />
+
+              {/* <Dialog>
+                <DialogTrigger asChild>
+                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
+                    <ScrollText size={18} className="text-gray-600" />
+                    Summarise Documents
+                  </span>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Summary Cases</DialogTitle>
+                    <DialogDescription>
+                      Choose a case to summarize them.
+                    </DialogDescription>
+                  </DialogHeader>
+                </DialogContent>
+              </Dialog> */}
+            </div>
+
+            {/* Send Button */}
             <button
               onClick={sendMessage}
-              className={`absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full transition-colors ${
+              className={`p-2 rounded-full transition-colors ${
                 input.trim()
                   ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
                   : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               }`}
             >
-              <Send size={18} className="m-0.5" />
+              <Send size={18} className="m-1" />
             </button>
-          </div>
-
-          {/* Document buttons */}
-          <div className="w-full flex justify-start items-center gap-2 pt-2 overflow-x-auto pb-1">
-            <Dialog>
-              <DialogTrigger asChild>
-                <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
-                  <Paperclip size={16} className="text-gray-600" />
-                  <span className="text-sm">Upload Documents</span>
-                </span>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Upload Documents</DialogTitle>
-                  <DialogDescription>
-                    Add your documents here.
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
-
-            <Dialog>
-              <DialogTrigger asChild>
-                <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
-                  <ScrollText size={16} className="text-gray-600" />
-                  <span className="text-sm">Summarise Documents</span>
-                </span>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Summary Cases</DialogTitle>
-                  <DialogDescription>
-                    Choose a case to summarize them.
-                  </DialogDescription>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
       </div>
