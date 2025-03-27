@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollText } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
 
 interface Case {
   id: string;
@@ -21,9 +28,31 @@ interface Case {
 }
 
 export function SummarizeDocuments() {
+  const [cases1, setCases] = useState<Case[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
+
+  const handleClick = async () => {
+    const token = localStorage.getItem("authToken");
+    try {
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL2 + "/cases_show",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ page: 1, per_page: 10, searchTerm: "" }),
+        }
+      );
+      const data = await res.json();
+      console.log("ases", data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   // Mock data - replace with your actual data source
   const cases: Case[] = [
@@ -112,10 +141,13 @@ export function SummarizeDocuments() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
+        <Button
+          onClick={handleClick}
+          className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap text-black"
+        >
           <ScrollText size={16} className="text-gray-600" />
           <span className="text-sm">Summarise Documents</span>
-        </span>
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -267,6 +299,21 @@ export function SummarizeDocuments() {
                 </Button>
               </div>
             </div>
+
+            {/* Dropdown menu */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">Open</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuGroup>
+                  <DropdownMenuItem>10 Per Page</DropdownMenuItem>
+                  <DropdownMenuItem>20 Per Page</DropdownMenuItem>
+                  <DropdownMenuItem>50 Per Page</DropdownMenuItem>
+                  <DropdownMenuItem>100 Per Page</DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

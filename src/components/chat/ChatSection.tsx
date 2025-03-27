@@ -22,6 +22,7 @@ import Image from "next/image";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 import { SummarizeDocuments } from "./SummarizeDocuments";
+import { Button } from "../ui/button";
 
 interface ChatMessage {
   user_query?: string | object;
@@ -190,6 +191,14 @@ const ChatSection = () => {
 
     const token = localStorage.getItem("authToken");
 
+    const timeout = 30 * 1000; // 30 seconds
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeout);
+
     try {
       const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/v1/chat", {
         method: "POST",
@@ -203,6 +212,7 @@ const ChatSection = () => {
           p_thread_id: threadId,
           p_question_id: questionId,
         }),
+        signal,
       });
 
       if (!res.ok) {
@@ -269,16 +279,34 @@ const ChatSection = () => {
         };
         generateHeading();
       }
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setCurrentMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "Sorry, there was an error processing your request.",
-        },
-      ]);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.name === "AbortError") {
+          console.error("Timeout error:", error);
+          setCurrentMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "Sorry, the chat API took too long to respond. Please try again later.",
+            },
+          ]);
+        } else {
+          console.error("Error sending message:", error);
+          setCurrentMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content:
+                "Sorry, there was an error processing your request. Please try again at a later time",
+            },
+          ]);
+        }
+      } else {
+        console.error("Unknown error:", error);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
       inputRef.current?.focus();
     }
@@ -548,29 +576,29 @@ const ChatSection = () => {
       {hasChatContent && (
         <>
           {/* Mobile Toggle Button for Anchor Links */}
-          <button
+          <Button
+            variant="outline"
+            size="icon"
             onClick={onToggleSidebar}
-            className="md:hidden fixed top-4 right-4 z-20 p-2 bg-white rounded-full shadow-md"
-            aria-label="Toggle navigation"
+            className="fixed top-8 right-4 z-20 md:hidden rounded-2xl"
           >
-            <Menu size={20} />
-          </button>
+            <Menu className="h-5 w-5" />
+          </Button>
 
           {/* Mobile Sidebar */}
           <div
-            className={`fixed inset-0 bg-white z-30 transition-transform duration-300 md:hidden ${
-              showSidebar ? "translate-x-0" : "translate-x-full"
-            }`}
+            className={`fixed inset-y-0 right-0 bg-white z-30 transition-transform duration-300 md:hidden
+        w-[65%] ${showSidebar ? "translate-x-0" : "translate-x-full"}`}
           >
             <div className="p-4 h-full overflow-y-auto">
               <button
                 onClick={onToggleSidebar}
-                className="absolute top-4 left-4 p-2"
+                className="absolute top-8 left-4 p-2"
                 aria-label="Close navigation"
               >
                 ✕
               </button>
-              <div className="mt-12">
+              <div className="mt-24">
                 <ChatAnchorLinks
                   messages={allMessages}
                   onLinkClick={scrollToMessage}

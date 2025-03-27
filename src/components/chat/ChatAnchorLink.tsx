@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 interface ChatAnchorLinksProps {
   messages: Array<{
@@ -59,10 +59,10 @@ const ChatAnchorLinks = ({
   };
 
   // Generate a truncated title for the query
-  const getTruncatedTitle = (content: string, maxLength = 20) => {
+  const getTruncatedTitle = (content: string, maxLength = 26) => {
     if (!content) return "";
     if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + "...";
+    return content.substring(0, maxLength) + "..";
   };
 
   // Generate an ID for the anchor
