@@ -8,7 +8,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   ArrowRight,
   ChevronUp,
@@ -27,6 +26,7 @@ import {
   Sheet,
   SheetContent,
   SheetFooter,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Image from "next/image";
@@ -203,15 +203,24 @@ export function CaseRef({ lookupData }: any) {
         </SheetTrigger>
         <SheetContent
           side="right"
-          className="max-w-[500px] sm:max-w-[75%] w-full"
+          className="max-w-[500px] sm:max-w-[75%] w-full flex flex-col overflow-hidden"
         >
-          <ScrollArea className="flex-1 px-6 overflow-y-auto">
+          <SheetTitle className="sr-only">Case Reference</SheetTitle>
+          <div className="p-6 pb-2">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Case References
+            </h2>
+          </div>
+
+          <div className="flex-1 px-6 overflow-y-auto">
             <div className="space-y-6 mt-4">
-              <div className="space-y-2">
-                <h2 className="text-lg font-semibold">Response</h2>
-                <p className="text-sm text-muted-foreground">
-                  {lookupData.content}
-                </p>
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Response
+                </h3>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <p className="text-sm">{lookupData.content}</p>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -225,10 +234,8 @@ export function CaseRef({ lookupData }: any) {
                             <span>
                               {caseItem.Title} ({caseItem.id})
                             </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 ml-2"
+                            <div
+                              className="h-8 w-8 p-0 ml-2 cursor-pointer flex items-center justify-center rounded-md hover:bg-accent"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleViewDetails(caseItem);
@@ -236,7 +243,7 @@ export function CaseRef({ lookupData }: any) {
                             >
                               <Eye className="h-4 w-4" />
                               <span className="sr-only">View Case</span>
-                            </Button>
+                            </div>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent>
@@ -286,42 +293,62 @@ export function CaseRef({ lookupData }: any) {
                 </Accordion>
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
-          <SheetFooter>
-            <div className="flex w-full items-center justify-between border-t border-border py-4">
+          <SheetFooter className="px-6 py-4 border-t">
+            <div className="flex w-full items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">
-                  is this helpful?
+                  Is this helpful?
                 </span>
                 {/* Thumbs Up */}
-                <button className="preferences">
-                  <ThumbsUp className="h-5 w-5" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full cursor-pointer"
+                >
+                  <ThumbsUp className="h-4 w-4" />
                   <span className="sr-only">Helpful</span>
-                </button>
-                {/* Thumbs Down*/}
-                <button className="preferences">
-                  <ThumbsDown className="h-5 w-5" />
+                </Button>
+                {/* Thumbs Down */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full cursor-pointer"
+                >
+                  <ThumbsDown className="h-4 w-4" />
                   <span className="sr-only">Not helpful</span>
-                </button>
+                </Button>
               </div>
 
-              <div className="flex items-center gap-4">
-                {/* Regenerate Button */}
-                <button className="caseref-actionbtn">
-                  <RefreshCcw className="h-5 w-5" />
+              <div className="flex items-center gap-2">
+                {/* Regenerate */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 cursor-pointer"
+                >
+                  <RefreshCcw className="h-4 w-4" />
                   <span className="hidden sm:inline">Regenerate</span>
-                </button>
-                {/* Download Button */}
-                <button className="caseref-actionbtn">
-                  <Download className="h-5 w-5" />
+                </Button>
+                {/* Download */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
                   <span className="hidden sm:inline">Download</span>
-                </button>
-                {/* Copy Button */}
-                <button className="caseref-actionbtn">
-                  <Copy className="h-5 w-5" />
+                </Button>
+                {/* Copy */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1.5 h-8 cursor-pointer"
+                >
+                  <Copy className="h-4 w-4" />
                   <span className="hidden sm:inline">Copy</span>
-                </button>
+                </Button>
               </div>
             </div>
           </SheetFooter>
@@ -331,16 +358,15 @@ export function CaseRef({ lookupData }: any) {
       {/* More Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="min-w-[95%] h-[95%] p-0 gap-0 overflow-hidden">
-          {/* Empty dialog title to remove the error */}
-          <DialogTitle> </DialogTitle>
+          <DialogTitle className="sr-only">Case Details</DialogTitle>
           {/* Close button */}
-          <button
+          <div
             onClick={() => setIsDialogOpen(false)}
             className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
-          </button>
+          </div>
 
           <div
             ref={dialogRef}
