@@ -69,29 +69,22 @@ export function CaseRef({ lookupData }: any) {
       }
     };
 
-    // Function to set up scroll listener
     const setupScrollListener = () => {
       const currentDialog = dialogRef.current;
       if (currentDialog) {
         currentDialog.addEventListener("scroll", handleScroll);
 
-        // Force an initial check
         handleScroll();
-
-        // Set up periodic checks for the first few seconds
-        // This helps when content loads dynamically
         scrollCheckInterval = setInterval(() => {
           handleScroll();
         }, 500);
 
-        // Clear interval after 5 seconds
         setTimeout(() => {
           clearInterval(scrollCheckInterval);
         }, 5000);
       }
     };
 
-    // Delay setup to ensure dialog is rendered
     const setupTimeout = setTimeout(setupScrollListener, 300);
 
     return () => {
@@ -109,11 +102,8 @@ export function CaseRef({ lookupData }: any) {
   const handleViewDetails = async (caseItem: any) => {
     setIsLoading(true);
     setIsDialogOpen(true);
-
-    // Clear any existing case details to reset the view
     setCaseDetails(undefined);
 
-    // Small delay to ensure dialog is open before fetching
     setTimeout(async () => {
       const token = localStorage.getItem("authToken");
       try {
@@ -139,7 +129,6 @@ export function CaseRef({ lookupData }: any) {
         if (data && data.data) {
           const firstKey = Object.keys(data.data)[0];
           if (firstKey && data.data[firstKey]) {
-            // Format the case details properly
             setCaseDetails({
               judgement: data.data[firstKey].Judgement || "",
               court: data.data[firstKey].court || "",
@@ -196,7 +185,7 @@ export function CaseRef({ lookupData }: any) {
         <SheetTrigger asChild>
           <Button
             variant="secondary"
-            className="bg-[#27272a] text-white hover:bg-[#212124]-800 cursor-pointer px-2"
+            className="bg-transparent hover:bg-slate-200 text-slate-700 border border-slate-300 cursor-pointer"
           >
             Case Ref <ArrowRight className="w-5 h-5" />
           </Button>
@@ -378,8 +367,7 @@ export function CaseRef({ lookupData }: any) {
               </div>
             ) : caseDetails ? (
               <div className="space-y-6">
-                {/* Logo and header */}
-                <div className="flex flex-col space-y-2">
+                <div className="flex justify-start">
                   <div className="flex flex-col items-center">
                     <Image
                       src="/sld-logo.png"
@@ -396,6 +384,16 @@ export function CaseRef({ lookupData }: any) {
 
                 {/* Citations */}
                 <div className="text-center space-y-2">
+                  <div className="flex justify-center my-6">
+                    <Image
+                      src="/logo.png"
+                      alt="Logo"
+                      width={350}
+                      height={350}
+                      className="h-auto"
+                    />
+                  </div>
+
                   <p className="text-2xl font-bold">
                     Cited as: {caseDetails.citation || "N/A"}
                   </p>
