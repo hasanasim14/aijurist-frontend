@@ -24,12 +24,13 @@ import toast from "react-hot-toast";
 
 export function Settings() {
   const [isEditing, setIsEditing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userData, setUserData] = useState({
     name: "",
     company: "",
     city: "",
   });
-  const [storageUsage, setStorageUsage] = useState(10);
+  // const [storageUsage, setStorageUsage] = useState(10);
   const [tempUserData, setTempUserData] = useState({ ...userData });
   const [user, setUser] = useState<User | null>(null);
 
@@ -298,11 +299,9 @@ export function Settings() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Plan Usage</span>
-                  <span className="font-medium">
-                    {storageUsage}% of 125 Messages
-                  </span>
+                  <span className="font-medium">10% of 125 Messages</span>
                 </div>
-                <Progress value={storageUsage} className="h-2" />
+                <Progress value={10} className="h-2" />
               </div>
 
               <div className="flex flex-wrap gap-2">

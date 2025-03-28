@@ -8,15 +8,15 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ScrollText } from "lucide-react";
+import { Upload } from "lucide-react";
 
 export function UploadDocuments() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
-          <ScrollText size={16} className="text-gray-600" />
-          <span className="text-sm">Upload Documents</span>
+        <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border hover:bg-gray-200 transition cursor-pointer whitespace-nowrap">
+          <Upload size={16} className="text-gray-600 mr-1" />
+          <span className="text-sm">Upload</span>
         </span>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">

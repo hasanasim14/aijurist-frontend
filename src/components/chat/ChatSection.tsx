@@ -2,28 +2,19 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useState, useRef } from "react";
 import { useChatContext } from "@/context/ChatContext";
 import { formatApiResponse } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Send, Paperclip, ScrollText, Menu } from "lucide-react";
+import { Menu, ArrowUp } from "lucide-react";
 import { useApiContext } from "@/context/APIContext";
 import { CaseRef } from "./CaseRef";
 import { useSidebar } from "../ui/sidebar";
-import Image from "next/image";
-import ChatAnchorLinks from "./ChatAnchorLink";
-import Header from "./Header";
 import { SummarizeDocuments } from "./SummarizeDocuments";
 import { Button } from "../ui/button";
-
+import { UploadDocuments } from "./UploadDocuments";
+import ChatAnchorLinks from "./ChatAnchorLink";
+import Header from "./Header";
+import Image from "next/image";
 interface ChatMessage {
   user_query?: string | object;
   llm_response?: string | object;
@@ -50,6 +41,7 @@ const ChatSection = () => {
   const initialRenderRef = useRef(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesStartRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -147,13 +139,18 @@ const ChatSection = () => {
     initialRenderRef.current = false;
   }, [selectedChatId]);
 
-  // Scroll to bottom when new messages are added
+  // Scroll to top when new messages are added
+  // Scroll to top when new messages are added
   useEffect(() => {
-    scrollToBottom();
+    scrollToTop();
   }, [pastChat, currentMessages, isLoading]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollToTop = () => {
+    // Option 1: Scroll to the top of the page
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Option 2: If you want to scroll to the top of a specific container
+    // messagesStartRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   const scrollToMessage = (index: number) => {
@@ -494,7 +491,7 @@ const ChatSection = () => {
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          <div ref={messagesStartRef} />
         </div>
         {/* Input Area */}
         <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
@@ -520,53 +517,20 @@ const ChatSection = () => {
           {/* Icons inside the input box */}
           <div className="w-full flex justify-between items-center pt-2">
             <div className="flex gap-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
-                    <Paperclip size={18} className="text-gray-600" />
-                    Upload Documents
-                  </span>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Upload Documents</DialogTitle>
-                    <DialogDescription>
-                      Add your documents here.
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-
+              <UploadDocuments />
               <SummarizeDocuments />
-
-              {/* <Dialog>
-                <DialogTrigger asChild>
-                  <span className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer">
-                    <ScrollText size={18} className="text-gray-600" />
-                    Summarise Documents
-                  </span>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
-                  <DialogHeader>
-                    <DialogTitle>Summary Cases</DialogTitle>
-                    <DialogDescription>
-                      Choose a case to summarize them.
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog> */}
             </div>
 
             {/* Send Button */}
             <button
               onClick={sendMessage}
-              className={`p-2 rounded-full transition-colors ${
+              className={`p-1 rounded-full transition-colors ${
                 input.trim()
                   ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
                   : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               }`}
             >
-              <Send size={18} className="m-1" />
+              <ArrowUp size={18} className="m-1" />
             </button>
           </div>
         </div>

@@ -51,7 +51,6 @@ export default function LoginPage() {
       [id]: value.trim() === "" ? "This field is required" : "",
     }));
 
-    // Email validation
     if (id === "email" && value.trim() !== "") {
       setErrors((prev) => ({
         ...prev,

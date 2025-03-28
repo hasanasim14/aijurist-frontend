@@ -14,12 +14,14 @@ import { Button } from "@/components/ui/button";
 import { ScrollText } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  // SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface Case {
   id: string;
@@ -28,7 +30,7 @@ interface Case {
 }
 
 export function SummarizeDocuments() {
-  const [cases1, setCases] = useState<Case[]>([]);
+  // const [cases1, setCases] = useState<Case[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
@@ -141,13 +143,13 @@ export function SummarizeDocuments() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
+        <span
           onClick={handleClick}
-          className="flex items-center gap-1 px-3 py-2 rounded-2xl border bg-gray-100 hover:bg-gray-200 transition cursor-pointer whitespace-nowrap text-black"
+          className="flex items-center gap-1 px-3 py-2 rounded-2xl border hover:bg-gray-200 transition cursor-pointer whitespace-nowrap text-black"
         >
-          <ScrollText size={16} className="text-gray-600" />
-          <span className="text-sm">Summarise Documents</span>
-        </Button>
+          <ScrollText size={16} className="text-gray-600 mr-1" />
+          <span className="text-sm">Summarise</span>
+        </span>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -299,21 +301,20 @@ export function SummarizeDocuments() {
                 </Button>
               </div>
             </div>
-
-            {/* Dropdown menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">Open</Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56">
-                <DropdownMenuGroup>
-                  <DropdownMenuItem>10 Per Page</DropdownMenuItem>
-                  <DropdownMenuItem>20 Per Page</DropdownMenuItem>
-                  <DropdownMenuItem>50 Per Page</DropdownMenuItem>
-                  <DropdownMenuItem>100 Per Page</DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Select */}
+            <Select>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select a fruit" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="apple">10 Per Page</SelectItem>
+                  <SelectItem value="banana">20 Per Page</SelectItem>
+                  <SelectItem value="blueberry">50 Per Page</SelectItem>
+                  <SelectItem value="grapes">100 Per Page</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
