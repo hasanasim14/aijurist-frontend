@@ -143,13 +143,14 @@ export function SummarizeDocuments() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <span
+        <Button
+          variant="outline"
           onClick={handleClick}
-          className="flex items-center gap-1 px-3 py-2 rounded-2xl border hover:bg-gray-200 transition cursor-pointer whitespace-nowrap text-black"
+          className="flex items-center gap-1 h-10 rounded-2xl border transition cursor-pointer whitespace-nowrap text-black"
         >
           <ScrollText size={16} className="text-gray-600 mr-1" />
           <span className="text-sm">Summarise</span>
-        </span>
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
