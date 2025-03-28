@@ -1,11 +1,16 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useMemo, useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
@@ -20,17 +25,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Edit,
+  Save,
+  X,
+  CreditCard,
+  Building,
+  MapPin,
+  Mail,
+  UserIcon,
+} from "lucide-react";
 import toast from "react-hot-toast";
 
 export function Settings() {
   const [isEditing, setIsEditing] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userData, setUserData] = useState({
     name: "",
     company: "",
     city: "",
   });
-  // const [storageUsage, setStorageUsage] = useState(10);
   const [tempUserData, setTempUserData] = useState({ ...userData });
   const [user, setUser] = useState<User | null>(null);
 
@@ -130,30 +143,26 @@ export function Settings() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-black">
           Account Settings
         </h1>
-        <p className="text-gray-700">
-          You can manage your Account and Billing settings here.
+        <p className="text-gray-500 mt-2">
+          Manage your personal information, account details, and subscription
+          preferences
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* First Column: Personal Information and Account */}
-        <div className="space-y-6">
-          {/* Personal Information */}
-          <Card className="bg-[#f4f4f5] border border-gray-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xl font-bold">
-                Personal Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <Avatar className="h-16 w-16 border-2 border-primary">
-                  <AvatarFallback>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left sidebar with user profile summary */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-8 w-full">
+            <Card className="bg-white shadow-sm border-0 overflow-hidden w-full">
+              <div className="bg-gradient-to-r from-primary/90 to-primary h-24"></div>
+              <div className="px-6 pb-6 -mt-12">
+                <Avatar className="h-24 w-24 border-4 border-white shadow-md">
+                  <AvatarFallback className="text-2xl bg-primary text-white">
                     {`${user?.firstName ?? ""} ${user?.lastName ?? ""}`
                       .trim()
                       .split(" ")
@@ -161,204 +170,251 @@ export function Settings() {
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
+                <div className="mt-4">
+                  <h2 className="text-xl font-bold">{`${
+                    user?.firstName ?? ""
+                  } ${user?.lastName ?? ""}`}</h2>
+                  <p className="text-gray-500 flex items-center mt-1">
+                    <Mail className="h-4 w-4 mr-1" />
+                    {user?.email}
+                  </p>
+                </div>
+
+                <Separator className="my-4" />
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-center text-gray-600">
+                    <Building className="h-4 w-4 mr-2" />
+                    <span>{user?.companyName || "No company set"}</span>
+                  </div>
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <span>{user?.city || "No location set"}</span>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Main content area */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Personal Information */}
+          <Card className="bg-white shadow-sm border-0">
+            <CardHeader className="border-b bg-gray-50/50">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  {!isEditing ? (
-                    <div className="space-y-1">
-                      <h3 className="font-medium text-lg">{`${
-                        user?.firstName ?? ""
-                      } ${user?.lastName ?? ""}`}</h3>
-                      <p className="text-sm text-gray-400">{user?.email}</p>
-                    </div>
-                  ) : (
+                  <CardTitle>Personal Information</CardTitle>
+                  <CardDescription className="sr-only">
+                    Update your personal details
+                  </CardDescription>
+                </div>
+                {!isEditing ? (
+                  <Button variant="outline" size="sm" onClick={handleEdit}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit
+                  </Button>
+                ) : null}
+              </div>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {!isEditing ? (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <div>
-                        <Label htmlFor="name" className="sr-only">
-                          Name
-                        </Label>
+                      <Label className="text-gray-500 text-sm">Full Name</Label>
+                      <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
+                        <UserIcon className="h-4 w-4 text-gray-400 mr-2" />
+                        <span>{`${user?.firstName ?? ""} ${
+                          user?.lastName ?? ""
+                        }`}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-500 text-sm">Email</Label>
+                      <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
+                        <Mail className="h-4 w-4 text-gray-400 mr-2" />
+                        <span>{user?.email}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-500 text-sm">Company</Label>
+                      <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
+                        <Building className="h-4 w-4 text-gray-400 mr-2" />
+                        <span>{user?.companyName || "Not specified"}</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-gray-500 text-sm">City</Label>
+                      <div className="flex items-center h-10 px-3 border rounded-md bg-gray-50">
+                        <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                        <span>{user?.city || "Not specified"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-gray-500 text-sm">
+                        Full Name
+                      </Label>
+                      <div className="relative">
+                        <UserIcon className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                         <Input
                           id="name"
                           name="name"
                           value={tempUserData.name}
                           onChange={handleChange}
+                          className="pl-9"
                         />
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <Separator className="bg-zinc-800" />
-
-              {!isEditing ? (
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-400">
-                      Company
-                    </h4>
-                    <p className="mt-1">{user?.companyName}</p>
+                    <div className="space-y-2">
+                      <Label className="text-gray-500 text-sm">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          value={user?.email || ""}
+                          disabled
+                          className="pl-9 bg-gray-50 text-gray-500"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label
+                        htmlFor="company"
+                        className="text-gray-500 text-sm"
+                      >
+                        Company
+                      </Label>
+                      <div className="relative">
+                        <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="company"
+                          name="company"
+                          value={tempUserData.company}
+                          onChange={handleChange}
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-gray-500 text-sm">
+                        City
+                      </Label>
+                      <div className="relative">
+                        <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 z-10" />
+                        <Select
+                          defaultValue={user?.city}
+                          name="city"
+                          onValueChange={(value) => {
+                            setTempUserData({
+                              ...tempUserData,
+                              city: value,
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="pl-9">
+                            <SelectValue placeholder="Select a city" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectGroup>{cityOptions}</SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-400">City</h4>
-                    <p className="mt-1">{user?.city}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div>
-                    <Label
-                      htmlFor="company"
-                      className="text-sm font-medium text-gray-400"
-                    >
-                      Company
-                    </Label>
-                    <Input
-                      id="company"
-                      name="company"
-                      value={tempUserData.company}
-                      onChange={handleChange}
-                      className="mt-1 w-full"
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="city"
-                      className="text-sm font-medium text-gray-400"
-                    >
-                      City
-                    </Label>
-                    <Select
-                      defaultValue={user?.city}
-                      name="city"
-                      // value={user?.city}
-                      onValueChange={(value) => {
-                        setTempUserData({
-                          ...tempUserData,
-                          city: value,
-                        });
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a city" />
-                      </SelectTrigger>
-                      {/* <SelectGroup>{cityOptions}</SelectGroup> */}
 
-                      <SelectContent>
-                        <SelectGroup>{cityOptions}</SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
-
-              {/* Add edit/save buttons at the end of the card */}
-              <div className="flex justify-end mt-4">
-                {!isEditing ? (
-                  <Button
-                    variant="outline"
-                    onClick={handleEdit}
-                    className="border border-gray-200 cursor-pointer"
-                  >
-                    Edit
-                  </Button>
-                ) : (
-                  <div className="flex space-x-4">
+                  <div className="flex justify-end space-x-3 pt-2">
                     <Button
                       variant="outline"
                       onClick={handleCancel}
-                      className="border border-gray-200 cursor-pointer"
+                      className="border-gray-200"
                     >
+                      <X className="h-4 w-4 mr-2" />
                       Cancel
                     </Button>
                     <Button
                       onClick={handleSave}
-                      className="bg-primary hover:bg-primary/90 cursor-pointer"
+                      className="bg-primary hover:bg-primary/90"
                       disabled={!hasChanges()}
                     >
-                      Save
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
                     </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Account */}
-          <Card className="bg-[#f4f4f5] border border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">Account</CardTitle>
+          {/* Subscription Details */}
+          <Card className="bg-white shadow-sm border-0">
+            <CardHeader className="border-b bg-gray-50/50">
+              <CardTitle>Subscription Details</CardTitle>
+              <CardDescription>
+                Manage your subscription and billing
+              </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-400">
-                    Free tier with limited features
-                  </p>
+            <CardContent className="pt-6">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-lg border border-primary/10">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-4">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Basic Plan</h3>
+                      <p className="text-sm text-gray-500">
+                        Free tier with limited features
+                      </p>
+                    </div>
+                  </div>
+                  <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-0">
+                    Active
+                  </Badge>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Plan Usage</span>
-                  <span className="font-medium">10% of 125 Messages</span>
+                {/* Plan usage progress bar */}
+                <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Plan Usage</span>
+                    <span className="font-medium">10% of 125 Messages</span>
+                  </div>
+                  <Progress value={10} className="h-2 bg-gray-200" />
                 </div>
-                <Progress value={10} className="h-2" />
-              </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button className="bg-primary cursor-pointer">
-                  Upgrade to Pro
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-zinc-700 cursor-pointer"
-                >
-                  Upgrade to Business
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-500 mb-1">Started On</div>
+                    <div className="font-medium">-</div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-500 mb-1">Expires On</div>
+                    <div className="font-medium">-</div>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-500 mb-1">
+                      Remaining Days
+                    </div>
+                    <div className="font-medium">-</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                  <Button className="bg-primary hover:bg-primary/90">
+                    Upgrade to Pro
+                  </Button>
+                  <Button variant="outline" className="border-gray-200">
+                    Upgrade to Business
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Second Column: Subscription */}
-        <Card className="bg-[#f4f4f5] border border-gray-200">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold">
-              Subscription Details
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <h3 className="font-medium">Current Plan</h3>
-                  <Badge variant="outline" className="bg-black text-white">
-                    Basic
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            <Separator className="bg-zinc-800" />
-
-            <div className="space-y-3">
-              {/* <h3 className="font-medium">Plan Features</h3> */}
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center">
-                  <span className="font-bold">Started On:</span>
-                  {/* {start date} */}
-                </li>
-                <li className="flex items-center">
-                  <span className="font-bold">Expires On:</span>
-                  {/* {end date} */}
-                </li>
-                <li className="flex items-center">
-                  <span className="font-bold">Remaining Days:</span>
-                  {/* {} */}
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
