@@ -16,7 +16,7 @@ interface ChatHistorySectionProps {
   onSelectChat: (chatId: number) => void;
   onEditChat: (chat: { id: number; title: string }) => void;
   onDeleteChat: (chat: { id: number; title: string }) => void;
-  toggleSidebar: () => void;
+  setOpenMobile: (open: boolean) => void;
 }
 
 export function ChatHistorySection({
@@ -26,7 +26,7 @@ export function ChatHistorySection({
   onSelectChat,
   onEditChat,
   onDeleteChat,
-  toggleSidebar,
+  setOpenMobile,
 }: ChatHistorySectionProps) {
   if (isCollapsed && !isMobile) return null;
 
@@ -58,7 +58,7 @@ export function ChatHistorySection({
                         onSelect={onSelectChat}
                         onEdit={onEditChat}
                         onDelete={onDeleteChat}
-                        toggleSidebar={toggleSidebar}
+                        setOpenMobile={setOpenMobile}
                       />
                     ))}
                 </div>

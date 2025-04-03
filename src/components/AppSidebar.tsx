@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 import { useChatContext } from "@/context/ChatContext";
 import { useApiContext } from "@/context/APIContext";
 import toast from "react-hot-toast";
+
 import { MobileTrigger } from "./appsidebar/MobileTrigger";
 import { SidebarNavigation } from "./appsidebar/SidebarNavigation";
 import { ChatHistorySection } from "./appsidebar/ChatHistorySection";
@@ -53,7 +54,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Reset page handler
   const onResetHandle = () => {
     resetPage();
-    if (isMobile) toggleSidebar();
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   // Logout handler
@@ -157,6 +160,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  // Handle selecting a chat
+  const handleSelectChat = (chatId: number) => {
+    setSelectedChatId(chatId);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  // Handle edit chat button
+  const handleEditChatButton = (chat: { id: number; title: string }) => {
+    setChatToEdit(chat);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
+  // Handle delete chat button
+  const handleDeleteChatButton = (chat: { id: number; title: string }) => {
+    setChatToDelete(chat);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   // Fetch chat history
   useEffect(() => {
     const fetchChatTitles = async () => {
@@ -213,19 +240,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             chatHistory={chatHistory}
             isMobile={isMobile}
             isCollapsed={isCollapsed}
-            onSelectChat={(chatId) => {
-              setSelectedChatId(chatId);
-              if (isMobile) toggleSidebar();
-            }}
-            onEditChat={(chat) => {
-              setChatToEdit(chat);
-              if (isMobile) toggleSidebar();
-            }}
-            onDeleteChat={(chat) => {
-              setChatToDelete(chat);
-              if (isMobile) toggleSidebar();
-            }}
-            toggleSidebar={toggleSidebar}
+            onSelectChat={handleSelectChat}
+            onEditChat={handleEditChatButton}
+            onDeleteChat={handleDeleteChatButton}
+            setOpenMobile={setOpenMobile}
           />
         </SidebarContent>
 
