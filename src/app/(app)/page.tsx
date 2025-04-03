@@ -1,9 +1,20 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import NotificationBar from "@/components/NotificationBar";
 import ChatSection from "@/components/chat/ChatSection";
 
-const ChatUI = () => {
+export default function ChatUI() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      router.push("/login");
+    }
+  }, [router]);
+
   return (
     <div className="relative min-h-screen flex flex-col bg-[#f9fafb]">
       <NotificationBar />
@@ -13,6 +24,4 @@ const ChatUI = () => {
       </div>
     </div>
   );
-};
-
-export default ChatUI;
+}
