@@ -140,7 +140,7 @@ export function Settings() {
         {label}
       </SelectItem>
     ));
-  }, []);
+  }, [cities]);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -158,7 +158,7 @@ export function Settings() {
         {/* Left sidebar with user profile summary */}
         <div className="lg:col-span-1">
           <div className="sticky top-8 w-full">
-            <Card className="bg-white shadow-sm border-0 overflow-hidden w-full">
+            <Card className="bg-white shadow-sm border-0 overflow-hidden w-full border">
               <div className="bg-gradient-to-r from-primary/90 to-primary h-24"></div>
               <div className="px-6 pb-6 -mt-12">
                 <Avatar className="h-24 w-24 border-4 border-white shadow-md">
@@ -200,7 +200,7 @@ export function Settings() {
         {/* Main content area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Personal Information */}
-          <Card className="bg-white shadow-sm border-0">
+          <Card className="bg-white shadow-sm border-0 border">
             <CardHeader className="border-b bg-gray-50/50">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -210,7 +210,12 @@ export function Settings() {
                   </CardDescription>
                 </div>
                 {!isEditing ? (
-                  <Button variant="outline" size="sm" onClick={handleEdit}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEdit}
+                    className="cursor-pointer"
+                  >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
@@ -316,10 +321,10 @@ export function Settings() {
                             });
                           }}
                         >
-                          <SelectTrigger className="pl-9">
+                          <SelectTrigger className="pl-9 w-full">
                             <SelectValue placeholder="Select a city" />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-[200px]">
                             <SelectGroup>{cityOptions}</SelectGroup>
                           </SelectContent>
                         </Select>
@@ -331,14 +336,14 @@ export function Settings() {
                     <Button
                       variant="outline"
                       onClick={handleCancel}
-                      className="border-gray-200"
+                      className="border-gray-200 cursor-pointer"
                     >
                       <X className="h-4 w-4 mr-2" />
                       Cancel
                     </Button>
                     <Button
                       onClick={handleSave}
-                      className="bg-primary hover:bg-primary/90"
+                      className="bg-primary hover:bg-primary/90 cursor-pointer"
                       disabled={!hasChanges()}
                     >
                       <Save className="h-4 w-4 mr-2" />
@@ -351,10 +356,10 @@ export function Settings() {
           </Card>
 
           {/* Subscription Details */}
-          <Card className="bg-white shadow-sm border-0">
+          <Card className="bg-white shadow-sm border">
             <CardHeader className="border-b bg-gray-50/50">
-              <CardTitle>Subscription Details</CardTitle>
-              <CardDescription>
+              <CardTitle className="mb-3">Subscription Details</CardTitle>
+              <CardDescription className="sr-only">
                 Manage your subscription and billing
               </CardDescription>
             </CardHeader>
@@ -404,10 +409,13 @@ export function Settings() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <Button className="bg-primary hover:bg-primary/90">
+                  <Button className="bg-primary hover:bg-primary/90 cursor-pointer">
                     Upgrade to Pro
                   </Button>
-                  <Button variant="outline" className="border-gray-200">
+                  <Button
+                    variant="outline"
+                    className="border-gray-200 cursor-pointer"
+                  >
                     Upgrade to Business
                   </Button>
                 </div>

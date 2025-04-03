@@ -1,8 +1,12 @@
-// Break into components
 "use client";
 
-import type React from "react";
-import { useEffect, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useChatContext } from "@/context/ChatContext";
 import { formatApiResponse } from "@/lib/utils";
 import { Menu, ArrowUp } from "lucide-react";
@@ -15,14 +19,70 @@ import { UploadDocuments } from "./UploadDocuments";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 import Image from "next/image";
+
 interface ChatMessage {
   user_query?: string | object;
   llm_response?: string | object;
   role?: string;
   content?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lookup?: any;
 }
+
+// Memoized Message Component to prevent unnecessary re-renders
+const Message = React.memo(
+  ({
+    message,
+    isUserMessage,
+    displayContent,
+    hasLookupData,
+    anchorId,
+  }: {
+    message: ChatMessage;
+    isUserMessage: boolean;
+    displayContent: string;
+    hasLookupData: boolean;
+    anchorId: string;
+  }) => {
+    return (
+      <div
+        className="flex flex-col space-y-2 transition-colors duration-300"
+        id={anchorId}
+      >
+        {isUserMessage ? (
+          <div className="p-3 my-5 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
+            {displayContent}
+          </div>
+        ) : (
+          <div className="flex items-start space-x-2 self-start mr-10">
+            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
+              <Image
+                src="/logo-small.png"
+                width={20}
+                height={20}
+                alt="Chatbot Logo"
+                priority
+              />
+            </div>
+            <div
+              className={`relative p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap ${
+                hasLookupData ? "pb-16" : ""
+              }`}
+            >
+              {displayContent}
+              {hasLookupData && (
+                <div className="absolute bottom-3 right-2">
+                  <CaseRef lookupData={message} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+);
+
+Message.displayName = "Message";
 
 const ChatSection = () => {
   const { selectedChatId, resetPageTrigger } = useChatContext();
@@ -47,7 +107,14 @@ const ChatSection = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // Memoized combined messages to prevent unnecessary recalculations
+  const allMessages = useMemo(
+    () => [...pastChat, ...currentMessages],
+    [pastChat, currentMessages]
+  );
+
+  // Optimized textarea resize handler
+  const resizeTextarea = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "40px";
       textareaRef.current.style.height = `${Math.min(
@@ -55,81 +122,80 @@ const ChatSection = () => {
         160
       )}px`;
     }
-  }, [input]);
+  }, []);
 
-  // Check if there's chat content
+  // Optimized input change handler
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      setInput(value);
+      requestAnimationFrame(resizeTextarea);
+    },
+    [resizeTextarea]
+  );
+
+  // Check if there's chat content (optimized)
   useEffect(() => {
-    setHasChatContent(pastChat.length > 0 || currentMessages.length > 0);
-  }, [pastChat, currentMessages]);
+    setHasChatContent(allMessages.length > 0);
+  }, [allMessages.length]);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    setShowHeading((prevState) => true);
+    setShowHeading(true);
   }, [resetPageTrigger]);
 
-  useEffect(() => {
-    setChatId(selectedChatId);
-    console.log(chatId);
-    const fetchPastChats = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!selectedChatId) {
-        setPastChat([]);
-        return;
-      }
+  // Fetch past chats with useCallback to memoize the function
+  const fetchPastChats = useCallback(async () => {
+    const token = localStorage.getItem("authToken");
+    if (!selectedChatId) {
+      setPastChat([]);
+      return;
+    }
 
-      try {
-        const res = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL2 + "/pastchat_t5",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ chat_id: selectedChatId }),
-          }
-        );
-        const data = await res.json();
-
-        const processedPastChat = Array.isArray(data?.data)
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data.data.flatMap((chat: any) => [
-              {
-                role: "user",
-                content: chat.user_query,
-              },
-              {
-                role: "assistant",
-                content: chat.llm_response,
-                lookup: chat.lookup,
-              },
-            ])
-          : [];
-
-        setPastChat(processedPastChat);
-
-        if (Array.isArray(data.data) && data.data.length > 0) {
-          if (data.data[data.data.length - 1]?.thread_id) {
-            setThreadID(
-              data.data.length > 0
-                ? data.data[data.data.length - 1].thread_id
-                : 1
-            );
-          }
-          if (data.data[data.data.length - 1]?.question_id) {
-            setQuestionID(
-              data.data.length > 0
-                ? data.data[data.data.length - 1].question_id
-                : 1
-            );
-          }
+    try {
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL2 + "/pastchat_t5",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ chat_id: selectedChatId }),
         }
-      } catch (error) {
-        console.error("Error fetching chat", error);
-        setPastChat([]);
-      }
-    };
+      );
+      const data = await res.json();
 
+      const processedPastChat = Array.isArray(data?.data)
+        ? data.data.flatMap((chat: any) => [
+            {
+              role: "user",
+              content: chat.user_query,
+            },
+            {
+              role: "assistant",
+              content: chat.llm_response,
+              lookup: chat.lookup,
+            },
+          ])
+        : [];
+
+      setPastChat(processedPastChat);
+
+      if (Array.isArray(data.data) && data.data.length > 0) {
+        if (data.data[data.data.length - 1]?.thread_id) {
+          setThreadID(data.data[data.data.length - 1].thread_id || 1);
+        }
+        if (data.data[data.data.length - 1]?.question_id) {
+          setQuestionID(data.data[data.data.length - 1].question_id || 1);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching chat", error);
+      setPastChat([]);
+    }
+  }, [selectedChatId]);
+
+  useEffect(() => {
     fetchPastChats();
     setCurrentMessages([]);
 
@@ -137,44 +203,42 @@ const ChatSection = () => {
       setShowHeading(false);
     }
     initialRenderRef.current = false;
+  }, [selectedChatId, fetchPastChats]);
+
+  useEffect(() => {
+    if (selectedChatId) {
+      scrollToTop();
+    }
   }, [selectedChatId]);
 
-  // Scroll to top when new messages are added
-  // Scroll to top when new messages are added
   useEffect(() => {
-    scrollToTop();
-  }, [pastChat, currentMessages, isLoading]);
-
-  const scrollToTop = () => {
-    // Option 1: Scroll to the top of the page
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    // Option 2: If you want to scroll to the top of a specific container
-    // messagesStartRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const scrollToMessage = (index: number) => {
-    const anchorId = `query-${index}`;
-    const element = messageRefs.current[anchorId];
-
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    } else {
-      const domElement = document.getElementById(anchorId);
-      if (domElement) {
-        domElement.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        console.log(`Element with ID ${anchorId} not found in DOM either`);
-      }
+    if (currentMessages.length > 0 || isLoading) {
+      scrollToBottom();
     }
+  }, [currentMessages.length, isLoading]);
+
+  // Memoized scroll functions
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
+  const scrollToMessage = useCallback((index: number) => {
+    const anchorId = `query-${index}`;
+    const element =
+      messageRefs.current[anchorId] || document.getElementById(anchorId);
+    element?.scrollIntoView({ behavior: "smooth", block: "start" });
 
     if (window.innerWidth < 768) {
       setShowSidebar(false);
     }
-  };
+  }, []);
 
-  // Handle sending a new message
-  const sendMessage = async () => {
+  // Memoized sendMessage function
+  const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
 
     const userQuery = input.trim();
@@ -187,14 +251,9 @@ const ChatSection = () => {
     ]);
 
     const token = localStorage.getItem("authToken");
-
-    const timeout = 30 * 1000; // 30 seconds
+    const timeout = 30 * 1000;
     const controller = new AbortController();
-    const signal = controller.signal;
-
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-    }, timeout);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
       const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/v1/chat", {
@@ -209,12 +268,10 @@ const ChatSection = () => {
           p_thread_id: threadId,
           p_question_id: questionId,
         }),
-        signal,
+        signal: controller.signal,
       });
 
-      if (!res.ok) {
-        throw new Error(`API responded with status: ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`API responded with status: ${res.status}`);
 
       const data = await res.json();
 
@@ -222,24 +279,17 @@ const ChatSection = () => {
         ...prev,
         {
           role: "assistant",
-          content:
-            data.data && data.data.llm_response
-              ? data.data.llm_response
-              : formatApiResponse(data),
+          content: data.data?.llm_response
+            ? data.data.llm_response
+            : formatApiResponse(data),
           lookup: data.data?.lookup,
         },
       ]);
 
-      // Always update thread_id and question_id from the response
       if (data.data) {
-        if (data.data.thread_id !== undefined) {
-          setThreadID(data.data.thread_id);
-        }
-
-        if (data.data.question_id !== undefined) {
+        if (data.data.thread_id !== undefined) setThreadID(data.data.thread_id);
+        if (data.data.question_id !== undefined)
           setQuestionID(data.data.question_id);
-        }
-
         if (
           data.data.chat_id &&
           (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
@@ -248,7 +298,6 @@ const ChatSection = () => {
         }
       }
 
-      // Generate heading api
       if (res.ok && selectedChatId === "") {
         const generateHeading = async () => {
           try {
@@ -267,9 +316,7 @@ const ChatSection = () => {
                 }),
               }
             );
-            if (anotherRes.ok) {
-              setShouldCallApi(true);
-            }
+            if (anotherRes.ok) setShouldCallApi(true);
           } catch (error) {
             console.error("Error running another API:", error);
           }
@@ -278,222 +325,137 @@ const ChatSection = () => {
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
-        if (error.name === "AbortError") {
-          console.error("Timeout error:", error);
-          setCurrentMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content:
-                "Sorry, the chat API took too long to respond. Please try again later.",
-            },
-          ]);
-        } else {
-          console.error("Error sending message:", error);
-          setCurrentMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content:
-                "Sorry, there was an error processing your request. Please try again at a later time",
-            },
-          ]);
-        }
-      } else {
-        console.error("Unknown error:", error);
+        const errorMessage =
+          error.name === "AbortError"
+            ? "Sorry, the chat API took too long to respond. Please try again later."
+            : "Sorry, there was an error processing your request. Please try again at a later time";
+
+        setCurrentMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: errorMessage },
+        ]);
       }
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);
       inputRef.current?.focus();
     }
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-
-    // Auto-resize the textarea
-    if (inputRef.current) {
-      inputRef.current.style.height = "40px";
-      inputRef.current.style.height = `${Math.min(
-        inputRef.current.scrollHeight,
-        160
-      )}px`;
-    }
-  };
+  }, [
+    input,
+    isLoading,
+    selectedChatId,
+    threadId,
+    questionId,
+    setShouldCallApi,
+  ]);
 
   // Handle Enter key press
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      setShowHeading((prevState) => false);
-      sendMessage();
-    }
-  };
-
-  const onToggleSidebar = () => {
-    setShowSidebar(!showSidebar);
-  };
-
-  const renderMessage = (message: ChatMessage, index: number) => {
-    if (!message) {
-      console.error("Undefined message at index", index);
-      return null;
-    }
-
-    const isUserMessage =
-      message.role === "user" || message.user_query !== undefined;
-
-    const content = isUserMessage
-      ? message.content || message.user_query
-      : message.content || message.llm_response;
-
-    const displayContent =
-      typeof content === "object"
-        ? JSON.stringify(content)
-        : String(content || "");
-
-    const hasLookupData =
-      !isUserMessage &&
-      message.lookup &&
-      typeof message.lookup === "object" &&
-      Object.keys(message.lookup).length > 0;
-
-    let userMessageIndex = -1;
-    if (isUserMessage) {
-      userMessageIndex = 0;
-      for (let i = 0; i < pastChat.length + currentMessages.length; i++) {
-        const msg =
-          i < pastChat.length
-            ? pastChat[i]
-            : currentMessages[i - pastChat.length];
-        if (msg && (msg.role === "user" || msg.user_query !== undefined)) {
-          if (
-            i === index ||
-            (i >= pastChat.length && i - pastChat.length + index === i)
-          ) {
-            break;
-          }
-          userMessageIndex++;
-        }
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        setShowHeading(false);
+        sendMessage();
       }
-    }
+    },
+    [sendMessage]
+  );
 
-    const anchorId = isUserMessage ? `query-${userMessageIndex}` : "";
+  const onToggleSidebar = useCallback(() => {
+    setShowSidebar(!showSidebar);
+  }, [showSidebar]);
 
-    return (
-      <div
-        key={index}
-        className="flex flex-col space-y-2 transition-colors duration-300"
-        ref={
-          isUserMessage
-            ? (el) => {
-                if (el) {
-                  messageRefs.current[anchorId] = el;
-                }
-              }
-            : null
-        }
-        id={anchorId}
-      >
-        {isUserMessage ? (
-          <div className="p-3 my-5 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
-            {displayContent}
+  // Memoized loading indicator
+  const LoadingIndicator = useMemo(
+    () => (
+      <div className="flex items-start space-x-2 self-start mr-10">
+        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
+          <Image
+            src="/logo-small.png"
+            width={20}
+            height={20}
+            alt="Chatbot Logo"
+            priority
+          />
+        </div>
+        <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200">
+          <div className="flex space-x-2">
+            {[0, 150, 300].map((delay) => (
+              <div
+                key={delay}
+                className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                style={{ animationDelay: `${delay}ms` }}
+              ></div>
+            ))}
           </div>
-        ) : (
-          <div className="flex items-start space-x-2 self-start mr-10">
-            {/* White Circle with Logo */}
-            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
-              <Image
-                src="/logo-small.png"
-                width={20}
-                height={20}
-                alt="Chatbot Logo"
-              />
-            </div>
-
-            {/* Response Text */}
-            <div
-              className={`relative p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap ${
-                hasLookupData ? "pb-16" : ""
-              }`}
-            >
-              {displayContent}
-
-              {hasLookupData && (
-                <div className="absolute bottom-3 right-2">
-                  <CaseRef lookupData={message} />
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
-    );
-  };
+    ),
+    []
+  );
 
-  // Combine past and current messages for the anchor links
-  const allMessages = [...pastChat, ...currentMessages];
+  // Calculate user message indices for anchor links
+  const userMessageIndices = useMemo(() => {
+    const indices: number[] = [];
+    allMessages.forEach((msg, index) => {
+      if (msg.role === "user" || msg.user_query !== undefined) {
+        indices.push(index);
+      }
+    });
+    return indices;
+  }, [allMessages]);
 
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
-      {/* Chat Container */}
       <div
         ref={chatContainerRef}
         className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16"
       >
         {showHeading && <Header />}
 
-        {/* Messages Container */}
         <div
-          className={`flex-1 overflow-y-auto pb-20 px-4 md:px-6 md:max-w-[95%] ${
+          className={`flex-1 overflow-y-auto pb-25 px-4 md:px-6 md:max-w-[95%] ${
             state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"
           }`}
         >
-          {/* Past Chat Messages */}
-          {Array.isArray(pastChat) &&
-            pastChat.length > 0 &&
-            pastChat.map((chat, index) => renderMessage(chat, index))}
+          {allMessages.map((message, index) => {
+            const isUserMessage =
+              message.role === "user" || message.user_query !== undefined;
+            const content = isUserMessage
+              ? message.content || message.user_query
+              : message.content || message.llm_response;
 
-          {/* Current Session Messages */}
-          {currentMessages.map((message, index) =>
-            renderMessage(message, pastChat.length + index)
-          )}
+            const displayContent =
+              typeof content === "object"
+                ? JSON.stringify(content)
+                : String(content || "");
 
-          {/* Loading Indicator */}
-          {isLoading && (
-            <div className="flex items-start space-x-2 self-start mr-10">
-              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border flex-shrink-0">
-                <Image
-                  src="/logo-small.png"
-                  width={20}
-                  height={20}
-                  alt="Chatbot Logo"
-                />
-              </div>
-              <div className="p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200">
-                <div className="flex space-x-2">
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
-                  ></div>
-                </div>
-              </div>
-            </div>
-          )}
+            const hasLookupData =
+              !isUserMessage &&
+              message.lookup &&
+              typeof message.lookup === "object" &&
+              Object.keys(message.lookup).length > 0;
 
+            const userMsgIndex = userMessageIndices.indexOf(index);
+            const anchorId = isUserMessage ? `query-${userMsgIndex}` : "";
+
+            return (
+              <Message
+                key={`msg-${index}`}
+                message={message}
+                isUserMessage={isUserMessage}
+                displayContent={displayContent}
+                hasLookupData={hasLookupData}
+                anchorId={anchorId}
+              />
+            );
+          })}
+
+          {isLoading && LoadingIndicator}
           <div ref={messagesStartRef} />
+          <div ref={messagesEndRef} />
         </div>
-        {/* Input Area */}
+
         <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
           <div className="w-full relative">
             <textarea
@@ -504,24 +466,19 @@ const ChatSection = () => {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               style={{
-                overflowY:
-                  textareaRef.current && textareaRef.current.scrollHeight > 160
-                    ? "auto"
-                    : "hidden",
+                overflowY: "hidden",
                 minHeight: "40px",
                 maxHeight: "160px",
               }}
             />
           </div>
 
-          {/* Icons inside the input box */}
           <div className="w-full flex justify-between items-center pt-2">
             <div className="flex gap-2">
               <UploadDocuments />
               <SummarizeDocuments />
             </div>
 
-            {/* Send Button */}
             <button
               onClick={sendMessage}
               className={`p-1 rounded-full transition-colors ${
@@ -529,6 +486,7 @@ const ChatSection = () => {
                   ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
                   : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
               }`}
+              disabled={!input.trim() || isLoading}
             >
               <ArrowUp size={18} className="m-1" />
             </button>
@@ -536,10 +494,8 @@ const ChatSection = () => {
         </div>
       </div>
 
-      {/* Anchor Links on the right side - Only show when there's chat content */}
       {hasChatContent && (
         <>
-          {/* Mobile Toggle Button for Anchor Links */}
           <Button
             variant="outline"
             size="icon"
@@ -549,10 +505,10 @@ const ChatSection = () => {
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* Mobile Sidebar */}
           <div
-            className={`fixed inset-y-0 right-0 bg-white z-30 transition-transform duration-300 md:hidden
-        w-[65%] ${showSidebar ? "translate-x-0" : "translate-x-full"}`}
+            className={`fixed inset-y-0 right-0 bg-white z-30 transition-transform duration-300 md:hidden w-[65%] ${
+              showSidebar ? "translate-x-0" : "translate-x-full"
+            }`}
           >
             <div className="p-4 h-full overflow-y-auto">
               <button
@@ -572,7 +528,6 @@ const ChatSection = () => {
             </div>
           </div>
 
-          {/* Desktop Sidebar */}
           <div className="hidden md:block fixed top-20 right-6 w-64 max-w-[20%]">
             <ChatAnchorLinks
               messages={allMessages}
