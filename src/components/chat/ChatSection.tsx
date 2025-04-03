@@ -19,6 +19,7 @@ import { UploadDocuments } from "./UploadDocuments";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 import Image from "next/image";
+import { EnhanceButton } from "./EnhanceButton";
 
 interface ChatMessage {
   user_query?: string | object;
@@ -415,7 +416,7 @@ const ChatSection = () => {
 
         <div
           className={`flex-1 overflow-y-auto px-4 md:px-6 md:max-w-[95%] ${
-            isMobile ? "mb-45" : ""
+            isMobile ? "mb-45" : "mb-25"
           } ${state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"}`}
         >
           {allMessages.map((message, index) => {
@@ -455,7 +456,6 @@ const ChatSection = () => {
           <div ref={messagesStartRef} />
           <div ref={messagesEndRef} />
         </div>
-
         <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
           <div className="w-full relative">
             <textarea
@@ -479,17 +479,23 @@ const ChatSection = () => {
               <SummarizeDocuments />
             </div>
 
-            <button
-              onClick={sendMessage}
-              className={`p-1 rounded-full transition-colors ${
-                input.trim()
-                  ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
-                  : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-              }`}
-              disabled={!input.trim() || isLoading}
-            >
-              <ArrowUp size={18} className="m-1" />
-            </button>
+            <div className="flex items-center gap-2">
+              <EnhanceButton
+                getInputText={() => input}
+                setInputText={(text) => setInput(text)}
+              />
+              <button
+                onClick={sendMessage}
+                className={`p-1 rounded-full transition-colors ${
+                  input.trim()
+                    ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
+                    : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                }`}
+                disabled={!input.trim() || isLoading}
+              >
+                <ArrowUp size={18} className="m-1" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
