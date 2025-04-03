@@ -87,7 +87,7 @@ Message.displayName = "Message";
 const ChatSection = () => {
   const { selectedChatId, resetPageTrigger } = useChatContext();
   const { setShouldCallApi } = useApiContext();
-  const { state } = useSidebar();
+  const { state, isMobile } = useSidebar();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -414,9 +414,9 @@ const ChatSection = () => {
         {showHeading && <Header />}
 
         <div
-          className={`flex-1 overflow-y-auto pb-25 px-4 md:px-6 md:max-w-[95%] ${
-            state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"
-          }`}
+          className={`flex-1 overflow-y-auto px-4 md:px-6 md:max-w-[95%] ${
+            isMobile ? "mb-45" : ""
+          } ${state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"}`}
         >
           {allMessages.map((message, index) => {
             const isUserMessage =
