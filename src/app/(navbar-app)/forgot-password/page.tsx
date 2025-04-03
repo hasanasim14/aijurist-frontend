@@ -51,7 +51,7 @@ export default function ForgotPassword() {
       );
 
       if (res.ok) {
-        toast.success("Password Reset Link sent");
+        toast.success("Password Reset Link Sent!");
       } else {
         toast.error("Failed to send password reset link.");
       }

@@ -90,7 +90,7 @@ export default function LoginPage() {
         throw new Error("Invalid email or password");
       }
 
-      toast.success("Login successful! Redirecting...");
+      toast.success("Login Successful! Redirecting...");
 
       const responseData = await res.json();
       const authToken = responseData?.data?.token;

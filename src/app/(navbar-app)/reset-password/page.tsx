@@ -64,7 +64,7 @@ export default function ResetPassword() {
         }
       );
       if (res.ok) {
-        toast.success("Password Reset Successful");
+        toast.success("Password Reset Successful!");
       } else {
         toast.error("Failed to reset password");
       }

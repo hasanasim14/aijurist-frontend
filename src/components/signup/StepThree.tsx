@@ -44,7 +44,7 @@ export function OTPVerificationStep({
         body: JSON.stringify({ email }),
       });
       setOtpCooldown(300);
-      toast.success("OTP resent successfully! Check your email.");
+      toast.success("OTP resent Successfully! Check your email.");
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Something went wrong!";

@@ -86,7 +86,7 @@ export default function SignupPage() {
         }),
       });
 
-      toast.success("OTP sent succes sfully! Please check your email.");
+      toast.success("OTP Sent Successfully! Please check your email.");
       setStep(step + 1);
     } catch (error) {
       const errorMessage =
@@ -109,7 +109,7 @@ export default function SignupPage() {
           body: JSON.stringify({ email: formData.email, otp: formData.otp }),
         }
       );
-      toast.success("Account verified successfully! Welcome aboard.");
+      toast.success("Account verified Successfully. Welcome Aboard!");
 
       const responseData = await res.json();
       const authToken = responseData?.data?.token;

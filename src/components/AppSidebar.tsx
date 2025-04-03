@@ -74,7 +74,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Something went wrong!";
-      toast.error(errorMessage);
+      toast.error("Logout failed. Try again later");
       console.error(error);
     }
   };
@@ -105,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         return newHistory;
       });
 
-      toast.success("Chat deleted successfully!");
+      toast.success("Chat Deleted Successfully!");
       setChatToDelete(null);
     } catch (error) {
       const errorMessage =
@@ -149,7 +149,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         return newHistory;
       });
 
-      toast.success("Chat renamed successfully!");
+      toast.success("Chat Renamed successfully!");
       setChatToEdit(null);
       setNewChatTitle("");
     } catch (error) {
