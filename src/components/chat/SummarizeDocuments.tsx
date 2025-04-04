@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import type React from "react";
+
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,11 +20,19 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  // SelectLabel,
   SelectTrigger,
   SelectValue,
-} from "../ui/select";
+} from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../ui/pagination";
 
 interface Case {
   id: string;
@@ -31,104 +41,84 @@ interface Case {
 }
 
 export function SummarizeDocuments() {
-  // const [cases1, setCases] = useState<Case[]>([]);
+  const [cases, setCases] = useState<Case[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const isMobile = useIsMobile();
 
-  const handleClick = async () => {
+  // Add this after your other state declarations
+  useEffect(() => {
+    console.log("Current page changed to:", currentPage);
+  }, [currentPage]);
+
+  // Fetch cases when dialog opens, page changes, or items per page changes
+  useEffect(() => {
+    if (open) {
+      const fetchData = async () => {
+        await fetchCases();
+      };
+      fetchData();
+    }
+  }, [open, currentPage, itemsPerPage, searchQuery]);
+
+  // Move fetchCases outside of useEffect to avoid dependency issues
+  const fetchCases = async () => {
     const token = sessionStorage.getItem("authToken");
+    if (!token || !open) return;
+
+    setLoading(true);
     try {
+      console.log(
+        `Fetching page ${currentPage} with ${itemsPerPage} items per page`
+      );
       const res = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL2 + "/cases_show",
+        `${process.env.NEXT_PUBLIC_BASE_URL2}/cases_show`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ page: 1, per_page: 10, searchTerm: "" }),
+          body: JSON.stringify({
+            page: currentPage,
+            per_page: itemsPerPage,
+            searchTerm: searchQuery,
+          }),
         }
       );
       const data = await res.json();
-      console.log("ases", data);
+      console.log("API response:", data);
+
+      if (data.data && data.data.documents) {
+        setCases(data.data.documents);
+        setTotalCount(data.data.total_count || data.data.documents.length);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching cases:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Mock data - replace with your actual data source
-  const cases: Case[] = [
-    {
-      id: "1",
-      citation: "1981 SLD 2001, (1981) 132 ITR 369",
-      petitioner: "Hemandass Dhanrajmal v. Commissioner of IncomE tax",
-    },
-    {
-      id: "2",
-      citation: "1983 SLD 2001, 1983 PLC 1186",
-      petitioner:
-        "MANSUR ALI KHAN vs SECRETARY TO GOVERNMENT OF PUNJAB, EDUCATION DEPARTMENT AND 2 OTHERS",
-    },
-    {
-      id: "3",
-      citation: "1984 SLD 2001, 1984 PLC 1693",
-      petitioner: "TUREJ AHMED vs D.I.G. OF POLICE, MULTAN RANGE AND 26 OTHERS",
-    },
-    {
-      id: "4",
-      citation: "1985 SLD 2001, 1985 PLC 609",
-      petitioner:
-        "NAWAB DIN vs ADDITIONAL DEPUTY COMMISSIONER (GENERAL), VEHARI AND ANOTHER",
-    },
-    {
-      id: "5",
-      citation: "1986 SLD 1058, 1986 SCMR 2001",
-      petitioner: "FEDERATION OF PAKISTAN- vs NAZIR AHMAD SWATI and another",
-    },
-    {
-      id: "6",
-      citation: "1986 SLD 2001, 1986 PLC 280",
-      petitioner: "AGRICULTURE ENGINEER, TALAGANG vs GULZAR HUSSAIN",
-    },
-    {
-      id: "7",
-      citation: "1989 SLD 2001, 1989 PLC 892",
-      petitioner: "KHADIM HUSSAIN vs CLIMAX ENGINEERING COMPANY LTD.",
-    },
-    {
-      id: "8",
-      citation: "1989 SLD 2001, 1989 SCMR 1980",
-      petitioner: "HAKIM JALAL KHAN vs HAMID AUGUSTIN and others",
-    },
-    {
-      id: "9",
-      citation:
-        "2001 SLD 168, 2001 PTD 1236, (1966) 62 ITR 2, (2001) 83 TAX 162",
-      petitioner:
-        "COMMISSIONER OF INCOME TAX Vs. KARNAL COOPERATIVE SUGAR MILLS LTD.",
-    },
-    {
-      id: "10",
-      citation: "1991 SLD 2001, 1991 PLC 1056",
-      petitioner:
-        "Agha RAFIQ AHMAD vs SECRETARY, FOOD DEPARTMENT and 23 others Agha RAFIQ AHMAD vs SECRETARY, FOOD DEPARTMENT and 23 others",
-    },
-  ];
+  const handleDialogOpen = () => {
+    setSelectedCases([]);
+    setCurrentPage(1);
+  };
 
-  const filteredCases = cases.filter(
-    (c) =>
-      c.citation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.petitioner.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
 
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredCases.length / itemsPerPage);
-  const paginatedCases = filteredCases.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const handleItemsPerPageChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1); // Reset to first page when items per page changes
+  };
 
   const handleCheckCase = (id: string) => {
     setSelectedCases((prev) =>
@@ -140,37 +130,97 @@ export function SummarizeDocuments() {
     // Handle the submission of selected cases
     console.log("Selected cases:", selectedCases);
     // Add your logic here
+    setOpen(false);
   };
 
+  // Calculate total pages based on total count from API
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
+  // const totalPages =
+
+  console.log("Total pages:", totalPages);
+  console.log("Total count:", totalCount);
+
+  // Generate pagination numbers
+  const getPaginationNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5; // You can adjust this number
+
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages if there aren't too many
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show pages around current page
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+
+      // Adjust if we're at the start or end
+      if (currentPage <= 3) {
+        endPage = maxVisiblePages;
+      } else if (currentPage >= totalPages - 2) {
+        startPage = totalPages - maxVisiblePages + 1;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      // Add ellipsis if needed
+      if (startPage > 1) {
+        pages.unshift("...");
+        pages.unshift(1);
+      }
+      if (endPage < totalPages) {
+        pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  useEffect(() => {
+    console.log("We could be heroes just for one day", currentPage);
+  }, [currentPage]);
+
   return (
-    <Dialog>
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (newOpen) handleDialogOpen();
+        setOpen(newOpen);
+      }}
+    >
       <DialogTrigger asChild>
         <Button
           variant="outline"
-          onClick={handleClick}
           className="flex items-center gap-1 h-10 rounded-2xl border transition cursor-pointer whitespace-nowrap text-black"
           size={isMobile ? "icon" : "default"}
         >
-          <ScrollText size={16} className={`text-gray-600 mr-1 ${isMobile}`} />
+          <ScrollText
+            size={16}
+            className={`text-gray-600 mr-1 ${isMobile ? "" : ""}`}
+          />
           {!isMobile && <span className="text-sm">Summarize</span>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl font-semibold">
             Summary Cases
           </DialogTitle>
           <DialogDescription>Select cases to summarize them</DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4 flex-1 overflow-hidden flex flex-col">
+        <div className="px-6 flex-1 overflow-hidden flex flex-col">
           {/* Search bar */}
-          <div className="relative mb-4">
+          <div className="relative mt-2">
             <Input
               type="text"
               placeholder="Search cases..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchChange}
               className="w-full pr-10 border rounded-md focus:ring-0 focus:outline-none focus:border-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
@@ -189,9 +239,9 @@ export function SummarizeDocuments() {
           </div>
 
           {/* Cases table */}
-          <div className="overflow-y-auto flex-1 border rounded-md">
+          <div className="overflow-y-auto flex-1 border rounded-md mb-4 mt-4">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th
                     scope="col"
@@ -212,124 +262,153 @@ export function SummarizeDocuments() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedCases.map((caseItem) => (
-                  <tr key={caseItem.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-4 whitespace-nowrap">
-                      <Checkbox
-                        checked={selectedCases.includes(caseItem.id)}
-                        onCheckedChange={() => handleCheckCase(caseItem.id)}
-                      />
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-900">
-                      {caseItem.citation}
-                    </td>
-                    <td className="px-3 py-4 text-sm text-gray-900">
-                      {caseItem.petitioner}
+                {loading ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-3 py-4 text-center text-sm text-gray-500"
+                    >
+                      Loading cases...
                     </td>
                   </tr>
-                ))}
+                ) : cases.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-3 py-4 text-center text-sm text-gray-500"
+                    >
+                      No cases found
+                    </td>
+                  </tr>
+                ) : (
+                  cases.map((caseItem) => (
+                    <tr
+                      key={caseItem.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleCheckCase(caseItem.id)}
+                    >
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <Checkbox
+                          checked={selectedCases.includes(caseItem.id)}
+                          onCheckedChange={() => handleCheckCase(caseItem.id)}
+                          className="cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                      <td className="px-3 py-3 text-sm text-gray-900">
+                        {caseItem.citation}
+                      </td>
+                      <td className="px-3 py-3 text-sm text-gray-900">
+                        {caseItem.petitioner}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+        </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="text-sm text-gray-700">
-              {filteredCases.length > 0 ? (
-                <span>
-                  Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-                  {Math.min(currentPage * itemsPerPage, filteredCases.length)}{" "}
-                  of {filteredCases.length} results
-                </span>
-              ) : (
-                <span>No results found</span>
-              )}
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(1)}
-                  disabled={currentPage === 1}
-                >
-                  &laquo;
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                >
-                  &lsaquo;
-                </Button>
+        {/* Footer with pagination, select, and action buttons */}
+        <div className="border-t px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Pagination controls - centered on mobile, inline on desktop */}
+          <div className="flex justify-center sm:justify-start items-center">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    // aria-disabled={currentPage === 1}
+                    // aria-disabled={true}
+                    href="#"
+                    onClick={(e) => {
+                      console.log("Clicked previous page");
+                      e.preventDefault();
+                      setCurrentPage((prev) => Math.max(1, prev - 1));
+                    }}
+                    // disabled={currentPage === 1}
+                  />
+                </PaginationItem>
+                {getPaginationNumbers().map((pageNum, index) => (
+                  <PaginationItem key={index}>
+                    {pageNum === "..." ? (
+                      <PaginationEllipsis />
+                    ) : (
+                      <PaginationLink
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (typeof pageNum === "number") {
+                            setCurrentPage(pageNum);
+                          }
+                        }}
+                        isActive={pageNum === currentPage}
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    )}
+                  </PaginationItem>
+                ))}
 
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum = i + 1;
-                  if (totalPages > 5 && currentPage > 3) {
-                    pageNum = currentPage - 3 + i;
-                  }
-                  if (pageNum > totalPages) return null;
+                <PaginationItem>
+                  {/* Next Button Pagination */}
+                  <PaginationNext
+                    href="#"
+                    onClick={(e) => {
+                      // console.log(
+                      //   "I would be king and you, you will be queen",
+                      //   Math.min(totalPages, prev + 1)
+                      // );
 
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
+                      setCurrentPage(currentPage + 1);
+                      // setCurrentPage(2);
+                      // e.preventDefault();
+                      // setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                    }}
+                    // disabled={currentPage === totalPages}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  &rsaquo;
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
-                  &raquo;
-                </Button>
-              </div>
-            </div>
-            {/* Select */}
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select a fruit" />
+          {/* Action buttons and select - full width on mobile, inline on desktop */}
+          <div className="flex items-center justify-between sm:justify-end gap-2 mt-4 sm:mt-0 w-full sm:w-auto">
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={handleItemsPerPageChange}
+            >
+              <SelectTrigger className="w-[150px] h-9">
+                <SelectValue placeholder="Items per page" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem value="apple">10 Per Page</SelectItem>
-                  <SelectItem value="banana">20 Per Page</SelectItem>
-                  <SelectItem value="blueberry">50 Per Page</SelectItem>
-                  <SelectItem value="grapes">100 Per Page</SelectItem>
+                  <SelectItem value="10">10 Per Page</SelectItem>
+                  <SelectItem value="20">20 Per Page</SelectItem>
+                  <SelectItem value="50">50 Per Page</SelectItem>
+                  <SelectItem value="100">100 Per Page</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
-          </div>
-        </div>
 
-        {/* Action buttons */}
-        <div className="flex justify-end space-x-2 mt-4 pt-4 border-t">
-          <Button variant="outline" onClick={() => {}}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={selectedCases.length === 0}>
-            Submit
-          </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setOpen(false)}
+                size="sm"
+                className="cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSubmit}
+                disabled={selectedCases.length === 0}
+                size="sm"
+                className="cursor-pointer"
+              >
+                Submit
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
