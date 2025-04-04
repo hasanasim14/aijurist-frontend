@@ -72,8 +72,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       sessionStorage.removeItem("authToken");
       router.push("/login");
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Something went wrong!";
       toast.error("Logout failed. Try again later");
       console.error(error);
     }
