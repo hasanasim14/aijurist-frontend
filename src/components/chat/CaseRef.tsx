@@ -105,7 +105,7 @@ export function CaseRef({ lookupData }: any) {
     setCaseDetails(undefined);
 
     setTimeout(async () => {
-      const token = localStorage.getItem("authToken");
+      const token = sessionStorage.getItem("authToken");
       try {
         const response = await fetch(
           process.env.NEXT_PUBLIC_BASE_URL2 + "/describe_t4",

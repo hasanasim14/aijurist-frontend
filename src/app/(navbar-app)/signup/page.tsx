@@ -49,7 +49,7 @@ export default function SignupPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = sessionStorage.getItem("authToken");
     if (token) {
       router.push("/");
     }
@@ -113,7 +113,7 @@ export default function SignupPage() {
 
       const responseData = await res.json();
       const authToken = responseData?.data?.token;
-      localStorage.setItem("authToken", authToken);
+      sessionStorage.setItem("authToken", authToken);
 
       setTimeout(() => {
         router.push("/");

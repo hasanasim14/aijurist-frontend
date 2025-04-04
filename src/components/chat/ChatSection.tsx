@@ -29,7 +29,6 @@ interface ChatMessage {
   lookup?: any;
 }
 
-// Memoized Message Component to prevent unnecessary re-renders
 const Message = React.memo(
   ({
     message,
@@ -99,8 +98,9 @@ const ChatSection = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasChatContent, setHasChatContent] = useState(false);
   const [showHeading, setShowHeading] = useState(true);
-  const initialRenderRef = useRef(true);
+  // const [authToken, setAuthToken] = useState("");
 
+  const initialRenderRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesStartRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -108,13 +108,11 @@ const ChatSection = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Memoized combined messages to prevent unnecessary recalculations
   const allMessages = useMemo(
     () => [...pastChat, ...currentMessages],
     [pastChat, currentMessages]
   );
 
-  // Optimized textarea resize handler
   const resizeTextarea = useCallback(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "40px";
@@ -125,7 +123,6 @@ const ChatSection = () => {
     }
   }, []);
 
-  // Optimized input change handler
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
@@ -135,7 +132,11 @@ const ChatSection = () => {
     [resizeTextarea]
   );
 
-  // Check if there's chat content (optimized)
+  // useEffect(() => {
+  //   const authToken = sessionStorage.getItem("authToken") || "";
+  //   setAuthToken(authToken);
+  // }, []);
+
   useEffect(() => {
     setHasChatContent(allMessages.length > 0);
   }, [allMessages.length]);
@@ -144,13 +145,16 @@ const ChatSection = () => {
     setShowHeading(true);
   }, [resetPageTrigger]);
 
-  // Fetch past chats with useCallback to memoize the function
+  // Fetch Past Chats
   const fetchPastChats = useCallback(async () => {
-    const token = localStorage.getItem("authToken");
     if (!selectedChatId) {
       setPastChat([]);
       return;
     }
+
+    const authToken = sessionStorage.getItem("authToken") || "";
+
+    console.log("You're all I need,", authToken);
 
     try {
       const res = await fetch(
@@ -159,7 +163,7 @@ const ChatSection = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify({ chat_id: selectedChatId }),
         }
@@ -251,17 +255,17 @@ const ChatSection = () => {
       { role: "user", content: userQuery },
     ]);
 
-    const token = localStorage.getItem("authToken");
     const timeout = 30 * 1000;
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+    const authToken = sessionStorage.getItem("authToken") || "";
     try {
       const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/v1/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           SearchQuery: userQuery,
@@ -308,7 +312,7 @@ const ChatSection = () => {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${authToken}`,
                 },
                 body: JSON.stringify({
                   chat_id: data?.data?.chat_id,
@@ -416,7 +420,7 @@ const ChatSection = () => {
 
         <div
           className={`flex-1 overflow-y-auto px-4 md:px-6 md:max-w-[95%] ${
-            isMobile ? "mb-45" : "mb-25"
+            isMobile ? "mb-35" : "mb-25"
           } ${state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"}`}
         >
           {allMessages.map((message, index) => {
@@ -456,7 +460,11 @@ const ChatSection = () => {
           <div ref={messagesStartRef} />
           <div ref={messagesEndRef} />
         </div>
-        <div className="fixed bottom-4 w-[90%] max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10">
+        <div
+          className={`fixed bottom-4 max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10 ${
+            isMobile ? "ml-2 w-[90%]" : "ml-14 w-[55%]"
+          }`}
+        >
           <div className="w-full relative">
             <textarea
               ref={textareaRef}
@@ -466,7 +474,10 @@ const ChatSection = () => {
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               style={{
-                overflowY: "hidden",
+                overflowY:
+                  textareaRef.current && textareaRef.current.scrollHeight > 160
+                    ? "auto"
+                    : "hidden",
                 minHeight: "40px",
                 maxHeight: "160px",
               }}

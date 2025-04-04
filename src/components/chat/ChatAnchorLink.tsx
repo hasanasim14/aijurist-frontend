@@ -18,7 +18,7 @@ interface ChatAnchorLinksProps {
 const ChatAnchorLinks = ({
   messages,
   onLinkClick,
-  maxLinks = 10,
+  maxLinks = 3,
 }: ChatAnchorLinksProps) => {
   const [visibleLinks, setVisibleLinks] = useState<number[]>([]);
   const [showMore, setShowMore] = useState(false);
@@ -59,7 +59,7 @@ const ChatAnchorLinks = ({
   };
 
   // Generate a truncated title for the query
-  const getTruncatedTitle = (content: string, maxLength = 26) => {
+  const getTruncatedTitle = (content: string, maxLength = 23) => {
     if (!content) return "";
     if (content.length <= maxLength) return content;
     return content.substring(0, maxLength) + "..";
@@ -111,7 +111,7 @@ const ChatAnchorLinks = ({
         {showMore && (
           <button
             onClick={showAllLinks}
-            className="text-[0.875rem] text-gray-500 hover:text-gray-700 pl-3 mt-2"
+            className="text-[0.875rem] text-gray-500 hover:text-gray-700 pl-3 mt-2 cursor-pointer"
           >
             Show more
           </button>

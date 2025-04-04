@@ -57,7 +57,7 @@ export function Settings() {
   };
 
   const handleSave = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = sessionStorage.getItem("authToken");
     try {
       const response = await fetch(
         process.env.NEXT_PUBLIC_BASE_URL2 + "/update_user_details",

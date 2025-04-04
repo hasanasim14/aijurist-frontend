@@ -31,7 +31,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = sessionStorage.getItem("authToken");
     if (token) {
       router.push("/");
     }
@@ -94,10 +94,10 @@ export default function LoginPage() {
 
       const responseData = await res.json();
       const authToken = responseData?.data?.token;
-      localStorage.setItem("authToken", authToken);
+      sessionStorage.setItem("authToken", authToken);
       sessionStorage.setItem(
         "user",
-        JSON.stringify(responseData?.data?.token_payload)
+        JSON.stringify(responseData?.data?.token_payload || {})
       );
 
       setTimeout(() => {

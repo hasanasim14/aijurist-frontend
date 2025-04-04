@@ -9,7 +9,7 @@ export default function ChatUI() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = sessionStorage.getItem("authToken");
     if (!token) {
       router.push("/login");
     }

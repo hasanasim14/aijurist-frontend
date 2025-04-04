@@ -10,7 +10,7 @@ export function Navbar() {
   const [authToken, setAuthToken] = useState<string>("");
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
+    const token = sessionStorage.getItem("authToken");
     if (token) {
       setAuthToken(token);
     }
@@ -140,7 +140,12 @@ export function Navbar() {
                 {authToken && (
                   <Link
                     href="/"
-                    className="group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out"
+                    className={`group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out ${
+                      isMenuOpen
+                        ? "opacity-100 translate-x-0"
+                        : "opacity-0 translate-x-8"
+                    }`}
+                    style={{ transitionDelay: "0ms" }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Go to Chat
@@ -158,7 +163,9 @@ export function Navbar() {
                         ? "opacity-100 translate-x-0"
                         : "opacity-0 translate-x-8"
                     }`}
-                    style={{ transitionDelay: `${index * 100}ms` }}
+                    style={{
+                      transitionDelay: `${(authToken ? 1 : 0) + index * 100}ms`,
+                    }}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}
@@ -172,7 +179,16 @@ export function Navbar() {
                     <Link
                       key={`auth-${index}`}
                       href={item.href}
-                      className="group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out"
+                      className={`group/item relative text-3xl font-medium text-black transition-all duration-500 ease-in-out ${
+                        isMenuOpen
+                          ? "opacity-100 translate-x-0"
+                          : "opacity-0 translate-x-8"
+                      }`}
+                      style={{
+                        transitionDelay: `${
+                          (navigationItems.length + index) * 100
+                        }ms`,
+                      }}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {item.label}

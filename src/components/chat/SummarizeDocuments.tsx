@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Case {
   id: string;
@@ -34,9 +35,10 @@ export function SummarizeDocuments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCases, setSelectedCases] = useState<string[]>([]);
+  const isMobile = useIsMobile();
 
   const handleClick = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = sessionStorage.getItem("authToken");
     try {
       const res = await fetch(
         process.env.NEXT_PUBLIC_BASE_URL2 + "/cases_show",
@@ -147,9 +149,10 @@ export function SummarizeDocuments() {
           variant="outline"
           onClick={handleClick}
           className="flex items-center gap-1 h-10 rounded-2xl border transition cursor-pointer whitespace-nowrap text-black"
+          size={isMobile ? "icon" : "default"}
         >
-          <ScrollText size={16} className="text-gray-600 mr-1" />
-          <span className="text-sm">Summarise</span>
+          <ScrollText size={16} className={`text-gray-600 mr-1 ${isMobile}`} />
+          {!isMobile && <span className="text-sm">Summarize</span>}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-hidden flex flex-col">

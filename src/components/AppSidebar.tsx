@@ -25,10 +25,10 @@ import { EditChatModal } from "./appsidebar/EditChatModal";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+  const { shouldCallApi } = useApiContext();
+  const { setSelectedChatId, resetPage } = useChatContext();
   const isCollapsed = state === "collapsed";
   const router = useRouter();
-  const { setSelectedChatId, resetPage } = useChatContext();
-  const { shouldCallApi } = useApiContext();
 
   // State
   const [chatHistory, setChatHistory] = useState<
@@ -61,15 +61,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Logout handler
   const handleLogout = async () => {
-    const token = localStorage.getItem("authToken");
+    const authToken = sessionStorage.getItem("authToken") || "";
     try {
       await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/logout_user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: token }),
+        body: JSON.stringify({ token: authToken }),
       });
       toast.success("Logged out Successfully!");
-      localStorage.removeItem("authToken");
+      sessionStorage.removeItem("authToken");
       router.push("/login");
     } catch (error) {
       const errorMessage =
@@ -82,14 +82,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Delete Chat Functionality
   const handleDeleteChat = async () => {
     if (!chatToDelete) return;
-
-    const token = localStorage.getItem("authToken");
+    const authToken = sessionStorage.getItem("authToken") || "";
     try {
       await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/delete_chat_update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({ chat_id: chatToDelete.id }),
       });
@@ -122,13 +121,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const newTitle = title || newChatTitle;
     if (!newTitle.trim()) return;
 
-    const token = localStorage.getItem("authToken");
+    const authToken = sessionStorage.getItem("authToken") || "";
+
     try {
       await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/rename_chat_title", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         },
         body: JSON.stringify({
           chat_id: chatToEdit.id,
@@ -187,7 +187,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Fetch chat history
   useEffect(() => {
     const fetchChatTitles = async () => {
-      const token = localStorage.getItem("authToken");
+      const authToken = sessionStorage.getItem("authToken") || "";
       try {
         const res = await fetch(
           process.env.NEXT_PUBLIC_BASE_URL2 + "/get_chat_titles",
@@ -195,7 +195,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${authToken}`,
             },
             body: JSON.stringify({ chat_id: "all", typeBin: "History" }),
           }
