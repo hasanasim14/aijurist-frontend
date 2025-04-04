@@ -28,7 +28,6 @@ export function ChatHistoryItem({
   onSelect,
   onEdit,
   onDelete,
-  setOpenMobile,
 }: ChatHistoryItemProps) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
