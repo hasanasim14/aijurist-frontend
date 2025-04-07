@@ -16,10 +16,10 @@ import { useSidebar } from "../ui/sidebar";
 import { SummarizeDocuments } from "./SummarizeDocuments";
 import { Button } from "../ui/button";
 import { UploadDocuments } from "./UploadDocuments";
+import { EnhanceButton } from "./EnhanceButton";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 import Image from "next/image";
-import { EnhanceButton } from "./EnhanceButton";
 
 interface ChatMessage {
   user_query?: string | object;
@@ -98,7 +98,6 @@ const ChatSection = () => {
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasChatContent, setHasChatContent] = useState(false);
   const [showHeading, setShowHeading] = useState(true);
-  // const [authToken, setAuthToken] = useState("");
 
   const initialRenderRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -131,11 +130,6 @@ const ChatSection = () => {
     },
     [resizeTextarea]
   );
-
-  // useEffect(() => {
-  //   const authToken = sessionStorage.getItem("authToken") || "";
-  //   setAuthToken(authToken);
-  // }, []);
 
   useEffect(() => {
     setHasChatContent(allMessages.length > 0);
@@ -221,6 +215,10 @@ const ChatSection = () => {
       scrollToBottom();
     }
   }, [currentMessages.length, isLoading]);
+
+  useEffect(() => {
+    resizeTextarea();
+  }, [resizeTextarea]);
 
   // Memoized scroll functions
   const scrollToBottom = useCallback(() => {
@@ -411,17 +409,19 @@ const ChatSection = () => {
   }, [allMessages]);
 
   return (
-    <div className="flex flex-col md:flex-row h-full w-full relative max-w-5xl mx-auto">
+    <div className="flex flex-col md:flex-row h-full w-full relative">
       <div
         ref={chatContainerRef}
-        className="flex-1 flex flex-col h-full overflow-hidden relative w-full max-w-4xl mx-auto md:mb-16"
+        className="flex-1 flex flex-col h-full overflow-hidden relative w-full mx-auto"
       >
         {showHeading && <Header />}
 
         <div
-          className={`flex-1 overflow-y-auto px-4 md:px-6 md:max-w-[95%] ${
-            isMobile ? "mb-35" : "mb-25"
-          } ${state === "expanded" ? "md:pr-[20%]" : "md:pr-[10%]"}`}
+          className={`flex-1 overflow-y-auto px-4 md:px-6 ${
+            state === "expanded"
+              ? "md:max-w-[calc(100%-var(--sidebar-width)/4)]"
+              : "md:max-w-[calc(100%-var(--sidebar-width-icon)/4)]"
+          } mx-auto pb-32 transition-all duration-300 ease-in-out`}
         >
           {allMessages.map((message, index) => {
             const isUserMessage =
@@ -460,52 +460,59 @@ const ChatSection = () => {
           <div ref={messagesStartRef} />
           <div ref={messagesEndRef} />
         </div>
-        <div
-          className={`fixed bottom-4 max-w-sm md:max-w-2xl lg:max-w-3xl bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center z-10 ${
-            isMobile ? "ml-2 w-[90%]" : "ml-14 w-[55%]"
-          }`}
-        >
-          <div className="w-full relative">
-            <textarea
-              ref={textareaRef}
-              className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 placeholder-gray-500"
-              placeholder="Type a message..."
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              style={{
-                overflowY:
-                  textareaRef.current && textareaRef.current.scrollHeight > 160
-                    ? "auto"
-                    : "hidden",
-                minHeight: "40px",
-                maxHeight: "160px",
-              }}
-            />
-          </div>
 
-          <div className="w-full flex justify-between items-center pt-2">
-            <div className="flex gap-2">
-              <UploadDocuments />
-              <SummarizeDocuments />
+        <div
+          className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 ${
+            state === "expanded"
+              ? "md:translate-x-[calc(-50%+var(--sidebar-width)/4)]"
+              : "md:translate-x-[calc(-50%+var(--sidebar-width-icon)/4)]"
+          } w-[90%] md:w-[60%] max-w-3xl z-10 transition-all duration-300 ease-in-out`}
+        >
+          <div className="bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center w-full">
+            <div className="w-full relative">
+              <textarea
+                ref={textareaRef}
+                className="w-full bg-transparent border-none focus:outline-none text-gray-800 dark:text-gray-100 resize-none overflow-y-auto text-left py-2 placeholder-gray-500"
+                placeholder="Type a message..."
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                style={{
+                  height: "40px",
+                  overflowY:
+                    textareaRef.current &&
+                    textareaRef.current.scrollHeight > 160
+                      ? "auto"
+                      : "hidden",
+                  minHeight: "40px",
+                  maxHeight: "160px",
+                }}
+              />
             </div>
 
-            <div className="flex items-center gap-2">
-              <EnhanceButton
-                getInputText={() => input}
-                setInputText={(text) => setInput(text)}
-              />
-              <button
-                onClick={sendMessage}
-                className={`p-1 rounded-full transition-colors ${
-                  input.trim()
-                    ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
-                    : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                }`}
-                disabled={!input.trim() || isLoading}
-              >
-                <ArrowUp size={18} className="m-1" />
-              </button>
+            <div className="w-full flex justify-between items-center pt-2">
+              <div className="flex gap-2">
+                <UploadDocuments />
+                <SummarizeDocuments />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <EnhanceButton
+                  getInputText={() => input}
+                  setInputText={(text) => setInput(text)}
+                />
+                <button
+                  onClick={sendMessage}
+                  className={`p-1 rounded-full transition-colors ${
+                    input.trim()
+                      ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
+                      : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                  }`}
+                  disabled={!input.trim() || isLoading}
+                >
+                  <ArrowUp size={18} className="m-1" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -557,5 +564,4 @@ const ChatSection = () => {
     </div>
   );
 };
-
 export default ChatSection;

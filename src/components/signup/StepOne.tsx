@@ -236,7 +236,7 @@ export function BasicInfoStep({
             setFormData((prev: any) => ({ ...prev, city: value }))
           }
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full text-base">
             <SelectValue placeholder="Select your city" />
           </SelectTrigger>
           <SelectContent>
