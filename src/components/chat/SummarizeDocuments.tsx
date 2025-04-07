@@ -24,15 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "../ui/pagination";
+import PaginationPreview from "./Pagination";
 
 interface Case {
   id: string;
@@ -51,12 +43,13 @@ export function SummarizeDocuments() {
   const [totalCount, setTotalCount] = useState(0);
   const isMobile = useIsMobile();
 
-  // Add this after your other state declarations
-  useEffect(() => {
-    console.log("Current page changed to:", currentPage);
-  }, [currentPage]);
+  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
 
-  // Fetch cases when dialog opens, page changes, or items per page changes
+  // Add this after your other state declarations
+  // useEffect(() => {
+  //   console.log("Current page changed to:", currentPage);
+  // }, [currentPage]);
+
   useEffect(() => {
     if (open) {
       const fetchData = async () => {
@@ -66,16 +59,15 @@ export function SummarizeDocuments() {
     }
   }, [open, currentPage, itemsPerPage, searchQuery]);
 
-  // Move fetchCases outside of useEffect to avoid dependency issues
   const fetchCases = async () => {
     const token = sessionStorage.getItem("authToken");
     if (!token || !open) return;
 
     setLoading(true);
     try {
-      console.log(
-        `Fetching page ${currentPage} with ${itemsPerPage} items per page`
-      );
+      // console.log(
+      //   `Fetching page ${currentPage} with ${itemsPerPage} items per page`
+      // );
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BASE_URL2}/cases_show`,
         {
@@ -92,11 +84,12 @@ export function SummarizeDocuments() {
         }
       );
       const data = await res.json();
-      console.log("API response:", data);
+      // console.log("API response:", data);
 
       if (data.data && data.data.documents) {
         setCases(data.data.documents);
-        setTotalCount(data.data.total_count || data.data.documents.length);
+        setTotalCount(data?.data?.pagination?.total_results || 0);
+        // console.log("Total count:", data.data.pagination.total_results);
       }
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -112,12 +105,12 @@ export function SummarizeDocuments() {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1);
   };
 
   const handleItemsPerPageChange = (value: string) => {
     setItemsPerPage(Number(value));
-    setCurrentPage(1); // Reset to first page when items per page changes
+    setCurrentPage(1);
   };
 
   const handleCheckCase = (id: string) => {
@@ -126,63 +119,16 @@ export function SummarizeDocuments() {
     );
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const handleSubmit = () => {
     // Handle the submission of selected cases
-    console.log("Selected cases:", selectedCases);
+    // console.log("Selected cases:", selectedCases);
     // Add your logic here
     setOpen(false);
   };
-
-  // Calculate total pages based on total count from API
-  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
-  // const totalPages =
-
-  console.log("Total pages:", totalPages);
-  console.log("Total count:", totalCount);
-
-  // Generate pagination numbers
-  const getPaginationNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5; // You can adjust this number
-
-    if (totalPages <= maxVisiblePages) {
-      // Show all pages if there aren't too many
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      // Show pages around current page
-      let startPage = Math.max(1, currentPage - 2);
-      let endPage = Math.min(totalPages, currentPage + 2);
-
-      // Adjust if we're at the start or end
-      if (currentPage <= 3) {
-        endPage = maxVisiblePages;
-      } else if (currentPage >= totalPages - 2) {
-        startPage = totalPages - maxVisiblePages + 1;
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        pages.push(i);
-      }
-
-      // Add ellipsis if needed
-      if (startPage > 1) {
-        pages.unshift("...");
-        pages.unshift(1);
-      }
-      if (endPage < totalPages) {
-        pages.push("...");
-        pages.push(totalPages);
-      }
-    }
-
-    return pages;
-  };
-
-  useEffect(() => {
-    console.log("We could be heroes just for one day", currentPage);
-  }, [currentPage]);
 
   return (
     <Dialog
@@ -205,7 +151,7 @@ export function SummarizeDocuments() {
           {!isMobile && <span className="text-sm">Summarize</span>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="sm:max-w-[850px] max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl font-semibold">
             Summary Cases
@@ -309,70 +255,17 @@ export function SummarizeDocuments() {
           </div>
         </div>
 
-        {/* Footer with pagination, select, and action buttons */}
-        <div className="border-t px-4 py-4 flex flex-col sm:flex-row sm:items-center gap-4">
-          {/* Pagination controls - centered on mobile, inline on desktop */}
+        {/* Footer */}
+        <div className="border-t px-4 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="flex justify-center sm:justify-start items-center">
-            <Pagination>
-              <PaginationContent>
-                <PaginationItem>
-                  <PaginationPrevious
-                    // aria-disabled={currentPage === 1}
-                    // aria-disabled={true}
-                    href="#"
-                    onClick={(e) => {
-                      console.log("Clicked previous page");
-                      e.preventDefault();
-                      setCurrentPage((prev) => Math.max(1, prev - 1));
-                    }}
-                    // disabled={currentPage === 1}
-                  />
-                </PaginationItem>
-                {getPaginationNumbers().map((pageNum, index) => (
-                  <PaginationItem key={index}>
-                    {pageNum === "..." ? (
-                      <PaginationEllipsis />
-                    ) : (
-                      <PaginationLink
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (typeof pageNum === "number") {
-                            setCurrentPage(pageNum);
-                          }
-                        }}
-                        isActive={pageNum === currentPage}
-                      >
-                        {pageNum}
-                      </PaginationLink>
-                    )}
-                  </PaginationItem>
-                ))}
-
-                <PaginationItem>
-                  {/* Next Button Pagination */}
-                  <PaginationNext
-                    href="#"
-                    onClick={(e) => {
-                      // console.log(
-                      //   "I would be king and you, you will be queen",
-                      //   Math.min(totalPages, prev + 1)
-                      // );
-
-                      setCurrentPage(currentPage + 1);
-                      // setCurrentPage(2);
-                      // e.preventDefault();
-                      // setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-                    }}
-                    // disabled={currentPage === totalPages}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+            <PaginationPreview
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onPageChange={handlePageChange}
+            />
           </div>
 
-          {/* Action buttons and select - full width on mobile, inline on desktop */}
-          <div className="flex items-center justify-between sm:justify-end gap-2 mt-4 sm:mt-0 w-full sm:w-auto">
+          <div className="flex items-center justify-between mt-4 sm:mt-0 w-full sm:w-auto">
             <Select
               value={itemsPerPage.toString()}
               onValueChange={handleItemsPerPageChange}
@@ -390,7 +283,7 @@ export function SummarizeDocuments() {
               </SelectContent>
             </Select>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 ml-2">
               <Button
                 variant="outline"
                 onClick={() => setOpen(false)}
