@@ -82,7 +82,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     if (!chatToDelete) return;
     const authToken = sessionStorage.getItem("authToken") || "";
     try {
-      await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/delete_chat_update", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/delete_chat_update", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const authToken = sessionStorage.getItem("authToken") || "";
 
     try {
-      await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/rename_chat_title", {
+      await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/rename_chat_title", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -186,9 +186,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useEffect(() => {
     const fetchChatTitles = async () => {
       const authToken = sessionStorage.getItem("authToken") || "";
+      console.log("authToken in AppSidebar", authToken);
       try {
         const res = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL2 + "/get_chat_titles",
+          process.env.NEXT_PUBLIC_BASE_URL + "/get_chat_titles",
           {
             method: "POST",
             headers: {
