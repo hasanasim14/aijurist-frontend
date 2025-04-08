@@ -45,7 +45,7 @@ const Message = React.memo(
   }) => {
     return (
       <div
-        className="flex flex-col space-y-2 transition-colors duration-300"
+        className="flex flex-col space-y-2 transition-colors duration-300 my-4"
         id={anchorId}
       >
         {isUserMessage ? (
@@ -85,14 +85,16 @@ const Message = React.memo(
 Message.displayName = "Message";
 
 const ChatSection = () => {
-  const { selectedChatId, resetPageTrigger } = useChatContext();
+  const { selectedChatId, setSelectedChatId, resetPageTrigger } =
+    useChatContext();
   const { setShouldCallApi } = useApiContext();
-  const { state, isMobile } = useSidebar();
+  const { state } = useSidebar();
   const [pastChat, setPastChat] = useState<ChatMessage[]>([]);
   const [currentMessages, setCurrentMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [chatId, setChatId] = useState<string | number>("");
+  const [activeChatId, setActiveChatId] = useState<string | number>("");
+  // const [chatId, setChatId] = useState<string | number>("");
   const [threadId, setThreadID] = useState(1);
   const [questionId, setQuestionID] = useState(1);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -136,8 +138,10 @@ const ChatSection = () => {
   }, [allMessages.length]);
 
   useEffect(() => {
-    setShowHeading(true);
-  }, [resetPageTrigger]);
+    if (!selectedChatId) {
+      setShowHeading(true);
+    }
+  }, [resetPageTrigger, selectedChatId]);
 
   // Fetch Past Chats
   const fetchPastChats = useCallback(async () => {
@@ -148,11 +152,9 @@ const ChatSection = () => {
 
     const authToken = sessionStorage.getItem("authToken") || "";
 
-    console.log("You're all I need,", authToken);
-
     try {
       const res = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL2 + "/pastchat_t5",
+        process.env.NEXT_PUBLIC_BASE_URL + "/pastchat_t5",
         {
           method: "POST",
           headers: {
@@ -198,6 +200,11 @@ const ChatSection = () => {
     fetchPastChats();
     setCurrentMessages([]);
 
+    // Reset activeChatId when switching to a new chat
+    if (selectedChatId) {
+      setActiveChatId("");
+    }
+
     if (!initialRenderRef.current && selectedChatId) {
       setShowHeading(false);
     }
@@ -240,128 +247,167 @@ const ChatSection = () => {
     }
   }, []);
 
-  // Memoized sendMessage function
-  const sendMessage = useCallback(async () => {
-    if (!input.trim() || isLoading) return;
+  // Replace both sendMessage and handleSummarizeSubmit with this unified function
+  const sendMessage = useCallback(
+    async (options?: {
+      summarize?: boolean;
+      caseIds?: string[];
+      customQuery?: string;
+    }) => {
+      const userQuery = options?.customQuery || input.trim();
 
-    const userQuery = input.trim();
-    setInput("");
-    setIsLoading(true);
+      if (!userQuery || isLoading) return;
 
-    setCurrentMessages((prev) => [
-      ...prev,
-      { role: "user", content: userQuery },
-    ]);
+      // Clear input if this is a regular message (not from summarize component)
+      if (!options?.customQuery) {
+        setInput("");
+      }
 
-    const timeout = 30 * 1000;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+      setIsLoading(true);
 
-    const authToken = sessionStorage.getItem("authToken") || "";
-    try {
-      const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/v1/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          SearchQuery: userQuery,
-          chat_id: selectedChatId || "",
-          p_thread_id: threadId,
-          p_question_id: questionId,
-        }),
-        signal: controller.signal,
-      });
+      // Only set showHeading to false if we already have a selected chat
+      if (selectedChatId) {
+        setShowHeading(false);
+      }
 
-      if (!res.ok) throw new Error(`API responded with status: ${res.status}`);
-
-      const data = await res.json();
-
+      // Add user message to chat
       setCurrentMessages((prev) => [
         ...prev,
-        {
-          role: "assistant",
-          content: data.data?.llm_response
-            ? data.data.llm_response
-            : formatApiResponse(data),
-          lookup: data.data?.lookup,
-        },
+        { role: "user", content: userQuery },
       ]);
 
-      if (data.data) {
-        if (data.data.thread_id !== undefined) setThreadID(data.data.thread_id);
-        if (data.data.question_id !== undefined)
-          setQuestionID(data.data.question_id);
-        if (
-          data.data.chat_id &&
-          (!selectedChatId || selectedChatId !== data.data.chat_id.toString())
-        ) {
-          setChatId(data.data.chat_id);
-        }
-      }
+      const timeout = 30 * 1000;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      if (res.ok && selectedChatId === "") {
-        const generateHeading = async () => {
-          try {
-            const anotherRes = await fetch(
-              process.env.NEXT_PUBLIC_BASE_URL2 + "/gen_heading",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${authToken}`,
-                },
-                body: JSON.stringify({
-                  chat_id: data?.data?.chat_id,
-                  llm_response: data?.data?.llm_response,
-                  SearchQuery: data?.data?.user_query,
-                }),
-              }
-            );
-            if (anotherRes.ok) setShouldCallApi(true);
-          } catch (error) {
-            console.error("Error running another API:", error);
-          }
+      const authToken = sessionStorage.getItem("authToken") || "";
+      try {
+        setShowHeading(false);
+
+        // Prepare the request body
+        const requestBody: any = {
+          SearchQuery: userQuery,
+          chat_id: selectedChatId || activeChatId || "",
+          p_thread_id: threadId,
+          p_question_id: questionId,
+          summarize: !!options?.summarize, // Convert to boolean
         };
-        generateHeading();
-      }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        const errorMessage =
-          error.name === "AbortError"
-            ? "Sorry, the chat API took too long to respond. Please try again later."
-            : "Sorry, there was an error processing your request. Please try again at a later time";
 
+        // Only add these fields if we're summarizing
+        if (options?.summarize) {
+          requestBody.file_id = options.caseIds;
+        }
+
+        const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/v1/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+
+        if (!res.ok)
+          throw new Error(`API responded with status: ${res.status}`);
+
+        const data = await res.json();
+
+        // Add assistant response to chat
         setCurrentMessages((prev) => [
           ...prev,
-          { role: "assistant", content: errorMessage },
+          {
+            role: "assistant",
+            content: data.data?.llm_response
+              ? data.data.llm_response
+              : formatApiResponse(data),
+            lookup: data.data?.lookup,
+          },
         ]);
+
+        // Update IDs if needed
+        if (data.data) {
+          if (data.data.thread_id !== undefined)
+            setThreadID(data.data.thread_id);
+          if (data.data.question_id !== undefined)
+            setQuestionID(data.data.question_id);
+          if (data.data.chat_id) {
+            setActiveChatId(data.data.chat_id);
+            // Wrong: selectedChatId(data.data.chat_id);
+            // Right:
+            // const abc = data.data.chat_id;
+            setSelectedChatId(data.data.chat_id);
+          }
+        }
+
+        // Generate heading only for new chats and only when it's the first message
+        if (res.ok && !selectedChatId && allMessages.length === 0) {
+          const generateHeading = async () => {
+            try {
+              const anotherRes = await fetch(
+                process.env.NEXT_PUBLIC_BASE_URL + "/gen_heading",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`,
+                  },
+                  body: JSON.stringify({
+                    chat_id: data?.data?.chat_id,
+                    llm_response: data?.data?.llm_response || "",
+                    SearchQuery: userQuery,
+                  }),
+                }
+              );
+              if (anotherRes.ok) setShouldCallApi(true);
+            } catch (error) {
+              console.error("Error running another API:", error);
+            }
+          };
+          generateHeading();
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          const errorMessage =
+            error.name === "AbortError"
+              ? "Sorry, the chat API took too long to respond. Please try again later."
+              : "Sorry, there was an error processing your request. Please try again at a later time";
+
+          setCurrentMessages((prev) => [
+            ...prev,
+            { role: "assistant", content: errorMessage },
+          ]);
+        }
+      } finally {
+        clearTimeout(timeoutId);
+        setIsLoading(false);
+        inputRef.current?.focus();
       }
-    } finally {
-      clearTimeout(timeoutId);
-      setIsLoading(false);
-      inputRef.current?.focus();
-    }
-  }, [
-    input,
-    isLoading,
-    selectedChatId,
-    threadId,
-    questionId,
-    setShouldCallApi,
-  ]);
+    },
+    [
+      input,
+      isLoading,
+      selectedChatId,
+      threadId,
+      questionId,
+      setShouldCallApi,
+      allMessages,
+      activeChatId,
+    ]
+  );
 
   // Handle Enter key press
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
-        setShowHeading(false);
+        if (selectedChatId) {
+          setShowHeading(false);
+        }
         sendMessage();
       }
     },
-    [sendMessage]
+    [sendMessage, selectedChatId]
   );
 
   const onToggleSidebar = useCallback(() => {
@@ -493,7 +539,16 @@ const ChatSection = () => {
             <div className="w-full flex justify-between items-center pt-2">
               <div className="flex gap-2">
                 <UploadDocuments />
-                <SummarizeDocuments />
+                <SummarizeDocuments
+                  setInput={setInput}
+                  onSubmit={(query, caseIds) =>
+                    sendMessage({
+                      summarize: true,
+                      caseIds,
+                      customQuery: query,
+                    })
+                  }
+                />
               </div>
 
               <div className="flex items-center gap-2">
@@ -502,7 +557,7 @@ const ChatSection = () => {
                   setInputText={(text) => setInput(text)}
                 />
                 <button
-                  onClick={sendMessage}
+                  onClick={() => sendMessage()}
                   className={`p-1 rounded-full transition-colors ${
                     input.trim()
                       ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
