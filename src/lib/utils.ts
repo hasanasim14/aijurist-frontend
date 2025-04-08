@@ -82,6 +82,14 @@ export interface User {
   firstName: string;
   lastName: string;
   session_id: string;
+  subscription: Subscription;
+}
+
+export interface Subscription {
+  plan_id: string;
+  plan_name: string;
+  starts_at: string;
+  expires_at: string;
 }
 
 /**
@@ -127,3 +135,18 @@ export function formatApiResponse(response: any): string {
     return "Error formatting response";
   }
 }
+
+// Date Formatting (DD-MMM-YYYY)
+export const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+
+  if (isNaN(date.getTime())) {
+    return "Invalid Date";
+  }
+
+  const day = date.getDate();
+  const month = date.toLocaleString("en-US", { month: "short" });
+  const year = date.getFullYear();
+
+  return `${day}-${month}-${year}`;
+};

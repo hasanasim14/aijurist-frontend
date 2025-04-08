@@ -13,7 +13,7 @@ export default function ProfilePage() {
       <div className="max-w-6xl mx-auto">
         <Settings />
         <Button
-          className="mt-4 cursor-pointer"
+          className="mt-4 cursor-pointer mx-4"
           onClick={() => router.push("/")}
         >
           <ChevronLeft className="h-5 w-5" />

@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { cities, type User } from "@/lib/utils";
+import { cities, formatDate, type User } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -38,6 +38,11 @@ import {
 import toast from "react-hot-toast";
 
 export function Settings() {
+  interface SubscriptionPlan {
+    _id: string;
+    name: string;
+  }
+
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
     name: "",
@@ -46,6 +51,9 @@ export function Settings() {
   });
   const [tempUserData, setTempUserData] = useState({ ...userData });
   const [user, setUser] = useState<User | null>(null);
+  const [subscriptionPlans, setSubscriptionPlans] = useState<
+    SubscriptionPlan[]
+  >([]);
 
   const handleEdit = () => {
     setTempUserData({
@@ -60,7 +68,7 @@ export function Settings() {
     const token = sessionStorage.getItem("authToken");
     try {
       const response = await fetch(
-        process.env.NEXT_PUBLIC_BASE_URL2 + "/update_user_details",
+        process.env.NEXT_PUBLIC_BASE_URL + "/update_user_details",
         {
           method: "POST",
           headers: {
@@ -141,6 +149,63 @@ export function Settings() {
       </SelectItem>
     ));
   }, [cities]);
+
+  // Get Plan Updates
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          process.env.NEXT_PUBLIC_BASE_URL + "/return_subscription_plans",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ flag: "false" }),
+          }
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          setSubscriptionPlans(data.data.subscription_plans);
+        } else {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+      } catch (error) {
+        console.error("Error fetching subscription plans:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Plan change handling
+  const handlePlanChange = async (planId: string) => {
+    console.log("Tha plan id", planId);
+    try {
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/update_plan",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: user?.email,
+            subscriptionType: planId,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.error("Error in handlePlanChange:", error);
+      throw error;
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -371,7 +436,9 @@ export function Settings() {
                       <CreditCard className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-medium">Basic Plan</h3>
+                      <h3 className="font-medium">
+                        {user?.subscription?.plan_name || ""}
+                      </h3>
                       <p className="text-sm text-gray-500">
                         Free tier with limited features
                       </p>
@@ -394,30 +461,35 @@ export function Settings() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <div className="text-sm text-gray-500 mb-1">Started On</div>
-                    <div className="font-medium">-</div>
+                    <div className="font-medium">
+                      {formatDate(user?.subscription?.starts_at || "")}
+                    </div>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-lg">
                     <div className="text-sm text-gray-500 mb-1">Expires On</div>
-                    <div className="font-medium">-</div>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-500 mb-1">
-                      Remaining Days
+                    <div className="font-medium">
+                      {formatDate(user?.subscription?.expires_at || "")}
                     </div>
-                    <div className="font-medium">-</div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                  <Button className="bg-primary hover:bg-primary/90 cursor-pointer">
-                    Upgrade to Pro
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-gray-200 cursor-pointer"
-                  >
-                    Upgrade to Business
-                  </Button>
+                  {subscriptionPlans
+                    .filter((plan) => plan.name !== "Free Trial")
+                    .map((plan) => (
+                      <Button
+                        key={plan._id}
+                        className={
+                          plan.name === "Basic"
+                            ? "bg-primary hover:bg-primary/90 cursor-pointer"
+                            : "border-gray-200 cursor-pointer"
+                        }
+                        variant={plan.name === "Basic" ? "default" : "outline"}
+                        onClick={() => handlePlanChange(plan._id)}
+                      >
+                        Upgrade to {plan.name}
+                      </Button>
+                    ))}
                 </div>
               </div>
             </CardContent>
