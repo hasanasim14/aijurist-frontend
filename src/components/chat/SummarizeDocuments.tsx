@@ -134,7 +134,7 @@ export function SummarizeDocuments({
       .join(", ");
 
     // Create the query text
-    const queryText = `Summarize (${selectedCitations})`;
+    const queryText = `Summarise (${selectedCitations})`;
 
     // Set the input in the ChatSection if the prop is provided
     if (setInput) {

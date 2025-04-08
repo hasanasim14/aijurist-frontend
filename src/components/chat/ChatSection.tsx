@@ -20,6 +20,7 @@ import { EnhanceButton } from "./EnhanceButton";
 import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 import Image from "next/image";
+import MarkDownComponent from "@/lib/markdown";
 
 interface ChatMessage {
   user_query?: string | object;
@@ -64,11 +65,15 @@ const Message = React.memo(
               />
             </div>
             <div
-              className={`relative p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 whitespace-pre-wrap ${
+              className={`relative p-4 rounded-lg max-w-2xl bg-[#f4f4f5] text-black border border-gray-200 ${
                 hasLookupData ? "pb-16" : ""
               }`}
             >
-              {displayContent}
+              {isUserMessage ? (
+                displayContent
+              ) : (
+                <MarkDownComponent>{displayContent}</MarkDownComponent>
+              )}
               {hasLookupData && (
                 <div className="absolute bottom-3 right-2">
                   <CaseRef lookupData={message} />
@@ -94,12 +99,12 @@ const ChatSection = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | number>("");
-  // const [chatId, setChatId] = useState<string | number>("");
   const [threadId, setThreadID] = useState(1);
   const [questionId, setQuestionID] = useState(1);
   const [showSidebar, setShowSidebar] = useState(false);
   const [hasChatContent, setHasChatContent] = useState(false);
   const [showHeading, setShowHeading] = useState(true);
+  const [isFirstMessage, setIsFirstMessage] = useState(true);
 
   const initialRenderRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -145,7 +150,7 @@ const ChatSection = () => {
 
   // Fetch Past Chats
   const fetchPastChats = useCallback(async () => {
-    if (!selectedChatId) {
+    if (!selectedChatId || isFirstMessage) {
       setPastChat([]);
       return;
     }
@@ -194,7 +199,7 @@ const ChatSection = () => {
       console.error("Error fetching chat", error);
       setPastChat([]);
     }
-  }, [selectedChatId]);
+  }, [selectedChatId, isFirstMessage]);
 
   useEffect(() => {
     fetchPastChats();
@@ -203,6 +208,10 @@ const ChatSection = () => {
     // Reset activeChatId when switching to a new chat
     if (selectedChatId) {
       setActiveChatId("");
+      setIsFirstMessage(false);
+    } else {
+      // If there's no selectedChatId, we're starting a new chat
+      setIsFirstMessage(true);
     }
 
     if (!initialRenderRef.current && selectedChatId) {
@@ -247,7 +256,6 @@ const ChatSection = () => {
     }
   }, []);
 
-  // Replace both sendMessage and handleSummarizeSubmit with this unified function
   const sendMessage = useCallback(
     async (options?: {
       summarize?: boolean;
@@ -258,9 +266,8 @@ const ChatSection = () => {
 
       if (!userQuery || isLoading) return;
 
-      // Always clear the input field after sending a message
+      // Clearing the output after sending an output
       setInput("");
-
       setIsLoading(true);
 
       // Only set showHeading to false if we already have a selected chat
@@ -282,18 +289,17 @@ const ChatSection = () => {
       try {
         setShowHeading(false);
 
-        // Prepare the request body
+        // Request Body
         const requestBody: any = {
           SearchQuery: userQuery,
           chat_id: selectedChatId || activeChatId || "",
-          p_thread_id: threadId,
           p_question_id: questionId,
-          summarize: !!options?.summarize, // Convert to boolean
+          summarise: !!options?.summarize,
         };
 
-        // Only add these fields if we're summarizing
+        // Summarize Documents object
         if (options?.summarize) {
-          requestBody.file_id = options.caseIds;
+          requestBody.cases = options.caseIds;
         }
 
         const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/v1/chat", {
@@ -331,14 +337,25 @@ const ChatSection = () => {
             setQuestionID(data.data.question_id);
           if (data.data.chat_id) {
             setActiveChatId(data.data.chat_id);
-            // Wrong: selectedChatId(data.data.chat_id);
-            // Right:
-            // const abc = data.data.chat_id;
             setSelectedChatId(data.data.chat_id);
+
+            // so that future fetchPastChats calls will work normally
+            if (isFirstMessage) {
+              setIsFirstMessage(false);
+            }
           }
         }
 
-        // Generate heading only for new chats and only when it's the first message
+        const requestBodyGenHeading: any = {
+          chat_id: data?.data?.chat_id,
+          SearchQuery: userQuery,
+        };
+
+        // If we are submitting for summarize documents
+        if (options?.summarize) {
+          requestBodyGenHeading.llm_response = userQuery;
+        }
+
         if (res.ok && !selectedChatId && allMessages.length === 0) {
           const generateHeading = async () => {
             try {
@@ -350,11 +367,7 @@ const ChatSection = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${authToken}`,
                   },
-                  body: JSON.stringify({
-                    chat_id: data?.data?.chat_id,
-                    llm_response: data?.data?.llm_response || "",
-                    SearchQuery: userQuery,
-                  }),
+                  body: JSON.stringify(requestBodyGenHeading),
                 }
               );
               if (anotherRes.ok) setShouldCallApi(true);
@@ -391,6 +404,7 @@ const ChatSection = () => {
       setShouldCallApi,
       allMessages,
       activeChatId,
+      isFirstMessage,
     ]
   );
 
