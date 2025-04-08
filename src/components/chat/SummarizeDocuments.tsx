@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useState, useEffect } from "react";
 import {
   Dialog,
@@ -32,7 +31,15 @@ interface Case {
   petitioner: string;
 }
 
-export function SummarizeDocuments() {
+interface SummarizeDocumentsProps {
+  setInput?: (text: string) => void;
+  onSubmit?: (query: string, caseIds: string[]) => void;
+}
+
+export function SummarizeDocuments({
+  setInput,
+  onSubmit,
+}: SummarizeDocumentsProps) {
   const [cases, setCases] = useState<Case[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,11 +51,6 @@ export function SummarizeDocuments() {
   const isMobile = useIsMobile();
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
-
-  // Add this after your other state declarations
-  // useEffect(() => {
-  //   console.log("Current page changed to:", currentPage);
-  // }, [currentPage]);
 
   useEffect(() => {
     if (open) {
@@ -65,11 +67,8 @@ export function SummarizeDocuments() {
 
     setLoading(true);
     try {
-      // console.log(
-      //   `Fetching page ${currentPage} with ${itemsPerPage} items per page`
-      // );
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BASE_URL2}/cases_show`,
+        `${process.env.NEXT_PUBLIC_BASE_URL}/cases_show`,
         {
           method: "POST",
           headers: {
@@ -84,12 +83,10 @@ export function SummarizeDocuments() {
         }
       );
       const data = await res.json();
-      // console.log("API response:", data);
 
       if (data.data && data.data.documents) {
         setCases(data.data.documents);
         setTotalCount(data?.data?.pagination?.total_results || 0);
-        // console.log("Total count:", data.data.pagination.total_results);
       }
     } catch (error) {
       console.error("Error fetching cases:", error);
@@ -124,9 +121,32 @@ export function SummarizeDocuments() {
   };
 
   const handleSubmit = () => {
-    // Handle the submission of selected cases
-    // console.log("Selected cases:", selectedCases);
-    // Add your logic here
+    if (selectedCases.length === 0) return;
+
+    // Get the selected case objects
+    const selectedCaseObjects = cases.filter((caseItem) =>
+      selectedCases.includes(caseItem.id)
+    );
+
+    // Create a string of citations
+    const selectedCitations = selectedCaseObjects
+      .map((caseItem) => caseItem.citation)
+      .join(", ");
+
+    // Create the query text
+    const queryText = `Summarize (${selectedCitations})`;
+
+    // Set the input in the ChatSection if the prop is provided
+    if (setInput) {
+      setInput(queryText);
+    }
+
+    // Call the onSubmit callback if provided
+    if (onSubmit) {
+      onSubmit(queryText, selectedCases);
+    }
+
+    // Close the dialog
     setOpen(false);
   };
 
@@ -151,7 +171,7 @@ export function SummarizeDocuments() {
           {!isMobile && <span className="text-sm">Summarize</span>}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[850px] max-h-[90vh] overflow-hidden flex flex-col p-0">
+      <DialogContent className="sm:max-w-[875px] max-h-[90vh] overflow-hidden flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-xl font-semibold">
             Summary Cases
@@ -241,10 +261,10 @@ export function SummarizeDocuments() {
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-900">
+                      <td className="px-1 py-1 text-sm text-gray-900 w-75">
                         {caseItem.citation}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-900">
+                      <td className="px-1 py-1 text-sm text-gray-900">
                         {caseItem.petitioner}
                       </td>
                     </tr>
@@ -270,7 +290,7 @@ export function SummarizeDocuments() {
               value={itemsPerPage.toString()}
               onValueChange={handleItemsPerPageChange}
             >
-              <SelectTrigger className="w-[150px] h-9">
+              <SelectTrigger className="w-[150px] h-9 cursor-pointer">
                 <SelectValue placeholder="Items per page" />
               </SelectTrigger>
               <SelectContent>

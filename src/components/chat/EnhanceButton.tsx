@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Wand2, Undo2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -15,18 +15,21 @@ export function EnhanceButton({
   onEnhance = async (text) => {
     try {
       const token = sessionStorage.getItem("authToken");
-      const response = await fetch(process.env.NEXT_PUBLIC_BASE_URL2 + "/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ text }),
-      });
+      const response = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/rewrite_qs",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ SearchQuery: text }),
+        }
+      );
 
       if (!response.ok) throw new Error("Failed to enhance text");
       const data = await response.json();
-      return data.enhancedText;
+      return data.data.llm_response;
     } catch (error) {
       console.error("Error enhancing text:", error);
       return text;
@@ -37,35 +40,45 @@ export function EnhanceButton({
 }: EnhanceButtonProps) {
   const [isEnhanced, setIsEnhanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [text, setText] = useState(getInputText());
   const originalTextRef = useRef<string>("");
   const isMobile = useIsMobile();
 
-  const handleEnhance = async () => {
+  useEffect(() => {
     const currentText = getInputText();
+    setText(currentText);
 
-    if (!currentText.trim()) return;
+    // Reset enhanced state if text is cleared or changed
+    if (currentText !== originalTextRef.current && currentText !== text) {
+      setIsEnhanced(false);
+    }
+  }, [getInputText]);
 
-    originalTextRef.current = currentText;
+  const handleEnhance = async () => {
+    originalTextRef.current = text;
     setIsLoading(true);
 
     try {
-      const enhancedText = await onEnhance(currentText);
-      const newText = "This is a new text";
+      const enhancedText = await onEnhance(text);
+      const newText = typeof enhancedText === "string" ? enhancedText : text;
+
+      setText(newText);
       setInputText(newText);
       setIsEnhanced(true);
     } catch (error) {
       console.error("Error enhancing text:", error);
+      setText(originalTextRef.current);
+      setInputText(originalTextRef.current);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleUndo = () => {
+    setText(originalTextRef.current);
     setInputText(originalTextRef.current);
     setIsEnhanced(false);
   };
-
-  const text = getInputText();
 
   return (
     <Button

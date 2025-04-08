@@ -186,7 +186,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   useEffect(() => {
     const fetchChatTitles = async () => {
       const authToken = sessionStorage.getItem("authToken") || "";
-      console.log("authToken in AppSidebar", authToken);
       try {
         const res = await fetch(
           process.env.NEXT_PUBLIC_BASE_URL + "/get_chat_titles",

@@ -108,7 +108,7 @@ export function CaseRef({ lookupData }: any) {
       const token = sessionStorage.getItem("authToken");
       try {
         const response = await fetch(
-          process.env.NEXT_PUBLIC_BASE_URL2 + "/describe_t4",
+          process.env.NEXT_PUBLIC_BASE_URL + "/describe_t4",
           {
             method: "POST",
             headers: {
@@ -142,7 +142,6 @@ export function CaseRef({ lookupData }: any) {
             });
           }
         }
-        console.log("Formatted Case Details:", caseDetails);
       } catch (error) {
         console.error("Error fetching case details:", error);
       } finally {

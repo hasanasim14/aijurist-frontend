@@ -179,9 +179,7 @@ export function Settings() {
     fetchData();
   }, []);
 
-  // Plan change handling
   const handlePlanChange = async (planId: string) => {
-    console.log("Tha plan id", planId);
     try {
       const res = await fetch(
         process.env.NEXT_PUBLIC_BASE_URL + "/update_plan",
