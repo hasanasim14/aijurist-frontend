@@ -258,10 +258,8 @@ const ChatSection = () => {
 
       if (!userQuery || isLoading) return;
 
-      // Clear input if this is a regular message (not from summarize component)
-      if (!options?.customQuery) {
-        setInput("");
-      }
+      // Always clear the input field after sending a message
+      setInput("");
 
       setIsLoading(true);
 
