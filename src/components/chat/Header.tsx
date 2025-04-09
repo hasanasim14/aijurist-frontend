@@ -1,31 +1,22 @@
-import type React from "react";
-import { Card, CardContent } from "../ui/card";
-import {
-  Globe,
-  Lightbulb,
-  BookOpen,
-  MessageCircle,
-  Code,
-  FileText,
-  Layers,
-  Pencil,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { User } from "@/lib/utils";
+"use client";
 
-const icons = [
-  Globe,
-  Lightbulb,
-  BookOpen,
-  MessageCircle,
-  Code,
-  FileText,
-  Layers,
-  Pencil,
-];
+import type React from "react";
+import { User } from "@/lib/utils";
+import { Card, CardContent } from "../ui/card";
+import { Globe, Lightbulb, BookOpen } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useChatContext } from "@/context/ChatContext";
+
+interface CardData {
+  id: number;
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+}
 
 const Header = () => {
   const [user, setUser] = useState<User | null>(null);
+  const { setSelectedChatId } = useChatContext();
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -33,6 +24,35 @@ const Header = () => {
       setUser(userData ? JSON.parse(userData) : null);
     }
   }, []);
+
+  const cardsData: CardData[] = [
+    {
+      id: 1,
+      title: "Web Research",
+      description: "Can you evict an orphan?",
+      icon: Globe,
+    },
+    {
+      id: 2,
+      title: "Creative Ideas",
+      description: "Summarize case 1947 SLD 1, (1947) 15 ITR 502 ",
+      icon: Lightbulb,
+    },
+    {
+      id: 3,
+      title: "Documentation",
+      description: "How to file a case",
+      icon: BookOpen,
+    },
+  ];
+
+  const handleCardClick = (description: string) => {
+    const event = new CustomEvent("startChatFromCard", {
+      detail: { query: description },
+    });
+    document.dispatchEvent(event);
+    setSelectedChatId("");
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto pt-8 pb-6 px-4">
@@ -50,31 +70,26 @@ const Header = () => {
         </p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-5xl mx-auto">
-        {[1, 2, 3].map((item, index) => {
-          const Icon = icons[index % icons.length];
-          return (
-            <Card
-              key={item}
-              className="flex flex-col items-center p-4 shadow-md rounded-xl bg-white dark:bg-gray-800 h-full flex-grow"
-            >
-              <Icon
-                size={36}
-                className="text-gray-600 dark:text-gray-400 mb-3"
-                aria-label={`Icon for Card ${item}`}
-              />
-              <CardContent className="text-center p-2 w-full">
-                <h3 className="text-lg font-semibold">Card {item}</h3>
-                <p className="text-sm text-gray-500">
-                  This is a sample text for card {item}.
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {cardsData.map((card) => (
+          <Card
+            key={card.id}
+            className="flex flex-col items-center p-4 shadow-md rounded-xl dark:bg-gray-800 h-full flex-grow cursor-pointer transition-colors duration-200 hover:bg-gray-200"
+            onClick={() => handleCardClick(card.description)}
+          >
+            <card.icon
+              size={36}
+              className="dark:text-gray-400 mb-3"
+              aria-label={`Icon for ${card.title}`}
+            />
+            <CardContent className="text-center p-2 w-full">
+              <h3 className="text-lg font-semibold">{card.title}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-300">
+                {card.description}
+              </p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto"> */}
-      {/* </div> */}
     </div>
   );
 };

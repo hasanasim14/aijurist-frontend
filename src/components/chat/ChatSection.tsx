@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
+import type { FunctionComponent } from "react";
 import { useChatContext } from "@/context/ChatContext";
 import { formatApiResponse } from "@/lib/utils";
 import { Menu, ArrowUp } from "lucide-react";
@@ -89,7 +90,11 @@ const Message = React.memo(
 
 Message.displayName = "Message";
 
-const ChatSection = () => {
+interface ChatSectionProps {
+  sendMessage?: (message: { customQuery: string }) => void;
+}
+
+const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const { selectedChatId, setSelectedChatId, resetPageTrigger } =
     useChatContext();
   const { setShouldCallApi } = useApiContext();
@@ -146,7 +151,7 @@ const ChatSection = () => {
     if (!selectedChatId) {
       setShowHeading(true);
     }
-  }, [resetPageTrigger, selectedChatId]);
+  }, [resetPageTrigger, selectedChatId, setShowHeading]);
 
   // Fetch Past Chats
   const fetchPastChats = useCallback(async () => {
@@ -218,7 +223,7 @@ const ChatSection = () => {
       setShowHeading(false);
     }
     initialRenderRef.current = false;
-  }, [selectedChatId, fetchPastChats]);
+  }, [selectedChatId, fetchPastChats, setShowHeading]);
 
   useEffect(() => {
     if (selectedChatId) {
@@ -349,6 +354,7 @@ const ChatSection = () => {
         const requestBodyGenHeading: any = {
           chat_id: data?.data?.chat_id,
           SearchQuery: userQuery,
+          llm_response: data?.data?.llm_response,
         };
 
         // If we are submitting for summarize documents
@@ -405,6 +411,7 @@ const ChatSection = () => {
       allMessages,
       activeChatId,
       isFirstMessage,
+      setShowHeading,
     ]
   );
 
@@ -419,12 +426,31 @@ const ChatSection = () => {
         sendMessage();
       }
     },
-    [sendMessage, selectedChatId]
+    [sendMessage, selectedChatId, setShowHeading]
   );
 
   const onToggleSidebar = useCallback(() => {
     setShowSidebar(!showSidebar);
   }, [showSidebar]);
+
+  // Add event listener for card clicks
+  useEffect(() => {
+    const handleCardClick = (event: CustomEvent<{ query: string }>) => {
+      sendMessage({ customQuery: event.detail.query });
+    };
+
+    document.addEventListener(
+      "startChatFromCard",
+      handleCardClick as EventListener
+    );
+
+    return () => {
+      document.removeEventListener(
+        "startChatFromCard",
+        handleCardClick as EventListener
+      );
+    };
+  }, [sendMessage]);
 
   // Memoized loading indicator
   const LoadingIndicator = useMemo(
