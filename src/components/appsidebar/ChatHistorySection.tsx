@@ -32,7 +32,7 @@ export function ChatHistorySection({
 
   return (
     <SidebarGroup>
-      <SidebarGroupContent className="max-h-[calc(100vh-220px)] overflow-y-auto">
+      <SidebarGroupContent className="max-h-[calc(100vh-200px)] overflow-y-auto">
         <div className="px-3 py-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
           Chat History
         </div>
@@ -48,7 +48,8 @@ export function ChatHistorySection({
                   </div>
 
                   {/* Chat Items */}
-                  {chats.length >= 1 &&
+                  {chats &&
+                    Array.isArray(chats) &&
                     chats.map((chat) => (
                       <ChatHistoryItem
                         key={chat.chat_id}

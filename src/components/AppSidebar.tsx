@@ -222,7 +222,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <MobileTrigger isMobile={isMobile} onTrigger={handleMobileTrigger} />
 
       <Sidebar collapsible="icon" {...props}>
-        <SidebarContent className={cn(isMobile ? "p-2" : "p-3")}>
+        <SidebarContent className={cn(isMobile ? "p-2" : "p-1")}>
           {/* Main Navigation */}
           <SidebarNavigation
             isCollapsed={isCollapsed}
@@ -277,7 +277,7 @@ export function SidebarWrapper({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex min-h-screen">
         <AppSidebar />
-        <div className="flex-1 p-4 pt-12">{children}</div>
+        <div className="flex-1 p-2 pt-12">{children}</div>
       </div>
     </SidebarProvider>
   );

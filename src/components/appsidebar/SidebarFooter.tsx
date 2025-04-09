@@ -35,7 +35,7 @@ export function SidebarFooter({
       className={cn("px-4 pb-4", isMobile ? "px-2 pb-2" : "px-4 pb-4")}
     >
       {/* Dotted Line Separator */}
-      <div className="border-t border-dotted border-gray-300 dark:border-gray-600 my-2" />
+      <div className="border-t border-dotted border-gray-300 dark:border-gray-600 mb-2" />
 
       <div
         className={cn(
