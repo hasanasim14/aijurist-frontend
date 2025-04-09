@@ -123,30 +123,23 @@ export function SummarizeDocuments({
   const handleSubmit = () => {
     if (selectedCases.length === 0) return;
 
-    // Get the selected case objects
     const selectedCaseObjects = cases.filter((caseItem) =>
       selectedCases.includes(caseItem.id)
     );
 
-    // Create a string of citations
     const selectedCitations = selectedCaseObjects
       .map((caseItem) => caseItem.citation)
       .join(", ");
 
-    // Create the query text
-    const queryText = `Summarise (${selectedCitations})`;
+    const queryText = `Summarize (${selectedCitations})`;
 
-    // Set the input in the ChatSection if the prop is provided
     if (setInput) {
       setInput(queryText);
     }
 
-    // Call the onSubmit callback if provided
     if (onSubmit) {
       onSubmit(queryText, selectedCases);
     }
-
-    // Close the dialog
     setOpen(false);
   };
 
