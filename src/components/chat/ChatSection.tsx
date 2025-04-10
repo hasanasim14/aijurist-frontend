@@ -29,6 +29,7 @@ interface ChatMessage {
   role?: string;
   content?: string;
   lookup?: any;
+  document?: string;
 }
 
 const Message = React.memo(
@@ -47,12 +48,17 @@ const Message = React.memo(
   }) => {
     return (
       <div
-        className="flex flex-col space-y-2 transition-colors duration-300 my-4"
+        className="flex flex-col transition-colors duration-300 my-2"
         id={anchorId}
       >
         {isUserMessage ? (
           <div className="p-3 my-5 rounded-lg max-w-2xl bg-[#e4e4e5] text-black self-end ml-10 border border-gray-300">
             {displayContent}
+            {message.document && (
+              <div className="text-xs mt-1 text-gray-500">
+                Document: {message.document}
+              </div>
+            )}
           </div>
         ) : (
           <div className="flex items-start space-x-2 self-start mr-10">
@@ -110,6 +116,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const [hasChatContent, setHasChatContent] = useState(false);
   const [showHeading, setShowHeading] = useState(true);
   const [isFirstMessage, setIsFirstMessage] = useState(true);
+  const [currentDocument, setCurrentDocument] = useState<string | null>(null);
 
   const initialRenderRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -181,6 +188,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
             {
               role: "user",
               content: chat.user_query,
+              document: chat.document,
             },
             {
               role: "assistant",
@@ -266,6 +274,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
       summarize?: boolean;
       caseIds?: string[];
       customQuery?: string;
+      documentFlag?: boolean;
     }) => {
       const userQuery = options?.customQuery || input.trim();
 
@@ -280,11 +289,14 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         setShowHeading(false);
       }
 
-      // Add user message to chat
-      setCurrentMessages((prev) => [
-        ...prev,
-        { role: "user", content: userQuery },
-      ]);
+      // Add user message to chat with document reference
+      const userMessage: ChatMessage = {
+        role: "user",
+        content: userQuery,
+        document: currentDocument || undefined,
+      };
+
+      setCurrentMessages((prev) => [...prev, userMessage]);
 
       const timeout = 30 * 1000;
       const controller = new AbortController();
@@ -300,6 +312,8 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
           chat_id: selectedChatId || activeChatId || "",
           p_question_id: questionId,
           summarise: !!options?.summarize,
+          document: currentDocument || undefined,
+          // what we next in our queries
         };
 
         // Summarize Documents object
@@ -399,6 +413,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         clearTimeout(timeoutId);
         setIsLoading(false);
         inputRef.current?.focus();
+        setCurrentDocument(null); // Reset document after sending
       }
     },
     [
@@ -412,7 +427,28 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
       activeChatId,
       isFirstMessage,
       setShowHeading,
+      currentDocument,
     ]
+  );
+
+  const handleFileUploaded = useCallback(
+    (fileName: string) => {
+      setCurrentDocument(fileName);
+      // setInput(`What would you like to ask about "${fileName}"? `);
+      const query = "What would you like to know about this file?";
+      sendMessage({
+        customQuery: query,
+        documentFlag: true,
+      });
+      // setTimeout(() => {
+      //   textareaRef.current?.focus();
+      //   if (textareaRef.current) {
+      //     textareaRef.current.selectionStart = textareaRef.current.value.length;
+      //     textareaRef.current.selectionEnd = textareaRef.current.value.length;
+      //   }
+      // }, 100);
+    },
+    [sendMessage]
   );
 
   // Handle Enter key press
@@ -503,9 +539,9 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         <div
           className={`flex-1 overflow-y-auto px-4 md:px-6 ${
             state === "expanded"
-              ? "md:max-w-[calc(100%-var(--sidebar-width)/4)]"
+              ? "md:max-w-[calc(100%-var(--sidebar-width)/4))]"
               : "md:max-w-[calc(100%-var(--sidebar-width-icon)/4)]"
-          } mx-auto pb-32 transition-all duration-300 ease-in-out`}
+          } mx-auto pb-32 transition-all duration-300 ease-in-out min-h-[200px]`} // Adjust min-height here to avoid excessive vertical space
         >
           {allMessages.map((message, index) => {
             const isUserMessage =
@@ -553,6 +589,11 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
           } w-[90%] md:w-[60%] max-w-3xl z-10 transition-all duration-300 ease-in-out`}
         >
           <div className="bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center w-full">
+            {/* {currentDocument && (
+              <div className="w-full text-xs text-gray-500 mb-1 px-2">
+                Discussing: {currentDocument}
+              </div>
+            )} */}
             <div className="w-full relative">
               <textarea
                 ref={textareaRef}
@@ -576,7 +617,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
 
             <div className="w-full flex justify-between items-center pt-2">
               <div className="flex gap-2">
-                <UploadDocuments />
+                <UploadDocuments onFileUploaded={handleFileUploaded} />
                 <SummarizeDocuments
                   setInput={setInput}
                   onSubmit={(query, caseIds) =>
@@ -662,4 +703,5 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
     </div>
   );
 };
+
 export default ChatSection;
