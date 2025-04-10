@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -14,14 +13,15 @@ import {
 import { cn } from "@/lib/utils";
 import { useChatContext } from "@/context/ChatContext";
 import { useApiContext } from "@/context/APIContext";
-import toast from "react-hot-toast";
-
 import { MobileTrigger } from "./appsidebar/MobileTrigger";
 import { SidebarNavigation } from "./appsidebar/SidebarNavigation";
 import { ChatHistorySection } from "./appsidebar/ChatHistorySection";
 import { SidebarFooter } from "./appsidebar/SidebarFooter";
 import { DeleteChatModal } from "./appsidebar/DeleteChatModal";
 import { EditChatModal } from "./appsidebar/EditChatModal";
+import { signIn, signOut, useSession } from "next-auth/react";
+import toast from "react-hot-toast";
+import { Button } from "./ui/button";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
@@ -43,6 +43,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     title: string;
   } | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { data: session } = useSession();
 
   // Handle mobile trigger
   const handleMobileTrigger = () => {
@@ -59,8 +61,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
   };
 
+  console.log("Google Session", session);
+  // console.log("API Session", sessionStorage.getItem("authToken"));
+
   // Logout handler
   const handleLogout = async () => {
+    setIsLoggingOut(true);
     const authToken = sessionStorage.getItem("authToken") || "";
     try {
       await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/logout_user", {
@@ -70,12 +76,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       });
       toast.success("Logged out Successfully!");
       sessionStorage.removeItem("authToken");
+      if (session) {
+        await signOut();
+      }
       router.push("/login");
     } catch (error) {
       toast.error("Logout failed. Try again later");
       console.error(error);
+    } finally {
+      setIsLoggingOut(false);
     }
   };
+
+  useEffect(() => {
+    const token = sessionStorage.getItem("authToken");
+    if (token && !isLoggingOut) {
+      router.push("/");
+    }
+  }, [router, isLoggingOut]);
 
   // Delete Chat Functionality
   const handleDeleteChat = async () => {
@@ -268,6 +286,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         onCancel={() => setChatToEdit(null)}
         defaultTitle={chatToEdit?.title || ""}
       />
+
+      {/* <Button onClick={() => signIn("google")}>00</Button> */}
     </>
   );
 }

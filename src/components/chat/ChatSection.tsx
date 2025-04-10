@@ -601,7 +601,12 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
                       ? "bg-black text-white hover:bg-gray-900 cursor-pointer"
                       : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   }`}
-                  disabled={!input.trim() || isLoading}
+                  disabled={
+                    !input.trim() || isLoading
+
+                    // || input ===
+                    //   '"Sorry, your query is too Short/Vague/Irrelevant to be enhanced"'
+                  }
                 >
                   <ArrowUp size={18} className="m-1" />
                 </button>
