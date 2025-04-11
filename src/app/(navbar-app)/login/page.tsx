@@ -15,10 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import {
-  signIn,
-  // , useSession
-} from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -33,7 +30,7 @@ export default function LoginPage() {
     email: "",
     password: "",
   });
-  // const { data: session, status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
   useEffect(() => {
@@ -42,6 +39,44 @@ export default function LoginPage() {
       router.push("/");
     }
   }, [router]);
+
+  // If google session found authenticate the user
+  useEffect(() => {
+    const checkSessionAndCallAPI = async () => {
+      if (status === "authenticated" && session?.user) {
+        try {
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BASE_URL}/login_auth_user`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: session.user.email,
+                fullName: session.user.name,
+              }),
+            }
+          );
+
+          const data = await res.json();
+
+          if (res.ok) {
+            if (data?.data?.token) {
+              sessionStorage.setItem("authToken", data.data.token);
+            }
+            toast.success("Login Successful! Redirecting...");
+            router.push("/");
+          } else {
+            throw new Error(data.message || "API request failed");
+          }
+        } catch (error) {
+          console.error("Error calling login_auth_user:", error);
+          toast.error("Failed to complete authentication");
+        }
+      }
+    };
+
+    checkSessionAndCallAPI();
+  }, [status, session, router]);
 
   // Email Validation
   const isValidEmail = (email: string) => {
@@ -122,13 +157,39 @@ export default function LoginPage() {
   const handleGoogleSignIn = async () => {
     try {
       setGoogleLoading(true);
-      await signIn("google", {
-        // callbackUrl: "/",
-        // redirect: true,
+
+      const response = await signIn("google", {
+        redirect: false,
       });
+
+      if (response?.error) {
+        throw new Error(response.error);
+      }
+
+      const session = await getSession();
+      if (session?.user) {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/login_auth_user`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: session.user.email,
+              name: session.user.name,
+            }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message || "API request failed");
+        }
+      }
     } catch (error) {
+      console.error("Error during Google sign-in:", error);
       toast.error("Google sign in failed. Please try again.");
-      console.error("The error ", error);
+    } finally {
       setGoogleLoading(false);
     }
   };
@@ -140,8 +201,6 @@ export default function LoginPage() {
       handleLogin();
     }
   };
-
-  // console.log("session", session);
 
   return (
     <div className="flex min-h-screen items-center justify-center">
