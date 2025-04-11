@@ -79,10 +79,12 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
 
   const handleSubmit = () => {
     if (selectedFiles.length > 0) {
-      const selectedFile = files.find((f) => f.id === selectedFiles[0]);
-      if (selectedFile) {
-        onFileUploaded(selectedFile.file);
-      }
+      const selectedFileNames = files
+        .filter((file) => selectedFiles.includes(file.id))
+        .map((file) => file.file);
+
+      onFileUploaded(selectedFileNames.join(", "));
+      setSelectedFiles([]);
     }
     setOpen(false);
   };
@@ -134,12 +136,15 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
       const formData = new FormData();
       formData.append("file", selectedFiles[0]);
 
-      await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/user_upload_data`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      await axios.post(
+        "https://devlegal.ai-iscp.com/user_upload_data",
         formData,
-      });
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       toast.success("File uploaded successfully!");
       // After successful upload, update the chat input
@@ -156,8 +161,6 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
       setUploading(false);
     }
   };
-
-  console.log("The file data is ", files);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
