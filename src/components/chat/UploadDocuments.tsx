@@ -112,8 +112,17 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
         !allowedExtensions.includes(`.${fileExtension}`)
       ) {
         toast.error(
-          "Unsupported file type. Only PDF, DOC, DOCX, and ZIP files are allowed."
+          "Unsupported file type. Only PDF, DOCX, and TXT files are allowed."
         );
+        return;
+      }
+
+      //Checking for files with duplicate names
+      const fileExists = files.some(
+        (existingFile) => existingFile.file === file.name
+      );
+      if (fileExists) {
+        toast.error(`A file with the same name "${file.name}" already exists`);
         return;
       }
     }
@@ -125,15 +134,12 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
       const formData = new FormData();
       formData.append("file", selectedFiles[0]);
 
-      await axios.post(
-        "https://devlegal.ai-iscp.com/user_upload_data",
+      await axios.post(`${process.env.NEXT_PUBLIC_BASE_URL}/user_upload_data`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      });
 
       toast.success("File uploaded successfully!");
       // After successful upload, update the chat input
