@@ -7,7 +7,6 @@ interface MarkDownComponentProps {
 
 interface CodeProps extends React.HTMLAttributes<HTMLElement> {
   inline?: boolean;
-  node?: any;
 }
 
 interface CaseData {
@@ -103,19 +102,17 @@ const MarkDownComponent: React.FC<MarkDownComponentProps> = ({ children }) => {
   const renderMarkdown = (content: string) => (
     <ReactMarkdown
       components={{
-        h1: ({ node, ...props }) => <h1 style={styles.h1} {...props} />,
-        h2: ({ node, ...props }) => <h2 style={styles.h2} {...props} />,
-        h3: ({ node, ...props }) => <h3 style={styles.h3} {...props} />,
-        p: ({ node, ...props }) => <p style={styles.p} {...props} />,
-        br: ({ node, ...props }) => <br style={styles.br} {...props} />,
-        strong: ({ node, ...props }) => (
-          <strong style={styles.strong} {...props} />
-        ),
-        em: ({ node, ...props }) => <em style={styles.em} {...props} />,
-        ul: ({ node, ...props }) => <ul style={styles.ul} {...props} />,
-        ol: ({ node, ...props }) => <ol style={styles.ol} {...props} />,
-        li: ({ node, ...props }) => <li style={styles.li} {...props} />,
-        a: ({ node, ...props }) => (
+        h1: ({ ...props }) => <h1 style={styles.h1} {...props} />,
+        h2: ({ ...props }) => <h2 style={styles.h2} {...props} />,
+        h3: ({ ...props }) => <h3 style={styles.h3} {...props} />,
+        p: ({ ...props }) => <p style={styles.p} {...props} />,
+        br: ({ ...props }) => <br style={styles.br} {...props} />,
+        strong: ({ ...props }) => <strong style={styles.strong} {...props} />,
+        em: ({ ...props }) => <em style={styles.em} {...props} />,
+        ul: ({ ...props }) => <ul style={styles.ul} {...props} />,
+        ol: ({ ...props }) => <ol style={styles.ol} {...props} />,
+        li: ({ ...props }) => <li style={styles.li} {...props} />,
+        a: ({ ...props }) => (
           <a
             style={styles.a}
             target="_blank"
@@ -123,18 +120,16 @@ const MarkDownComponent: React.FC<MarkDownComponentProps> = ({ children }) => {
             {...props}
           />
         ),
-        blockquote: ({ node, ...props }) => (
+        blockquote: ({ ...props }) => (
           <blockquote style={styles.blockquote} {...props} />
         ),
-        code: ({ node, inline, ...props }: CodeProps) => (
+        code: ({ inline, ...props }: CodeProps) => (
           <code style={inline ? styles.code : undefined} {...props} />
         ),
-        pre: ({ node, ...props }) => <pre style={styles.pre} {...props} />,
-        table: ({ node, ...props }) => (
-          <table style={styles.table} {...props} />
-        ),
-        th: ({ node, ...props }) => <th style={styles.th} {...props} />,
-        td: ({ node, ...props }) => <td style={styles.td} {...props} />,
+        pre: ({ ...props }) => <pre style={styles.pre} {...props} />,
+        table: ({ ...props }) => <table style={styles.table} {...props} />,
+        th: ({ ...props }) => <th style={styles.th} {...props} />,
+        td: ({ ...props }) => <td style={styles.td} {...props} />,
       }}
     >
       {content}
@@ -168,8 +163,8 @@ const MarkDownComponent: React.FC<MarkDownComponentProps> = ({ children }) => {
         </div>
       );
     }
-  } catch (e) {
-    console.log("Content is not JSON, rendering as plain markdown");
+  } catch (error) {
+    console.log("Content is not JSON, rendering as plain markdown", error);
   }
 
   return renderMarkdown(children);
