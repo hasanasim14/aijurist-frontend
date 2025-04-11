@@ -15,7 +15,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
+import {
+  signIn,
+  // , useSession
+} from "next-auth/react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -125,6 +128,7 @@ export default function LoginPage() {
       });
     } catch (error) {
       toast.error("Google sign in failed. Please try again.");
+      console.error("The error ", error);
       setGoogleLoading(false);
     }
   };
