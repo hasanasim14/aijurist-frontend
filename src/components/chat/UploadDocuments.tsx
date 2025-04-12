@@ -10,7 +10,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileUp, Upload, Plus } from "lucide-react";
+import { FileUp, Upload, Plus, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import toast from "react-hot-toast";
@@ -31,6 +31,8 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
   const [open, setOpen] = useState(false);
   const [files, setFiles] = useState<FileData[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [fileToDelete, setFileToDelete] = useState<FileData | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -64,6 +66,7 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
       setFiles(formattedFiles);
     } catch (error) {
       console.error("Error fetching files:", error);
+      toast.error("Failed to load files");
     } finally {
       setLoading(false);
     }
@@ -75,6 +78,43 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
         ? prev.filter((id) => id !== fileId)
         : [...prev, fileId]
     );
+  };
+
+  const handleDeleteFile = async (fileName: string) => {
+    try {
+      const authToken = sessionStorage.getItem("authToken");
+      const res = await fetch(
+        process.env.NEXT_PUBLIC_BASE_URL + "/delete_files",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({
+            fileIds: [fileName],
+            delAll: false,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to delete file");
+      }
+
+      toast.success("File deleted successfully");
+
+      setFiles(files.filter((file) => file.file !== fileName));
+      setSelectedFiles(
+        selectedFiles.filter((id) => {
+          const file = files.find((f) => f.file === fileName);
+          return file ? id !== file.id : true;
+        })
+      );
+    } catch (error) {
+      toast.error("Failed to delete file");
+      console.error("Delete error:", error);
+    }
   };
 
   const handleSubmit = () => {
@@ -207,13 +247,16 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="overflow-y-auto flex-1 border rounded-md mb-6 bg-white shadow-sm">
+          <div className="overflow-y-auto flex-1 border rounded-md mb-2 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="w-10 px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
                   <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     File Name
+                  </th>
+                  <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -240,8 +283,7 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
                   files.map((file) => (
                     <tr
                       key={file.id}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
-                      onClick={() => handleFileSelect(file.id)}
+                      className="hover:bg-gray-50 transition-colors"
                     >
                       <td className="px-3 py-3 whitespace-nowrap">
                         <Checkbox
@@ -251,12 +293,28 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-900 whitespace-normal break-words min-w-[200px]">
+                      <td
+                        className="px-3 py-3 text-sm text-gray-900 whitespace-normal break-words min-w-[200px] cursor-pointer"
+                        onClick={() => handleFileSelect(file.id)}
+                      >
                         <div className="flex items-center gap-2">
                           <FileUp className="h-4 w-4 text-gray-400 flex-shrink-0" />
                           <span className="truncate hover:text-clip hover:whitespace-normal">
                             {file.file}
                           </span>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFileToDelete(file);
+                            }}
+                            className="p-1 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+                          >
+                            <Trash2Icon className="w-5 h-5 text-gray-500 hover:text-red-500" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -267,7 +325,47 @@ export function UploadDocuments({ onFileUploaded }: UploadDocumentsProps) {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={!!fileToDelete}
+          onOpenChange={(open) => !open && setFileToDelete(null)}
+        >
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete File</DialogTitle>
+              <DialogDescription className="text-black">
+                Are you sure you want to delete{" "}
+                <span className="font-bold">
+                  &quot;{fileToDelete?.file}&quot;
+                </span>{" "}
+                ? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                className="cursor-pointer"
+                variant="outline"
+                onClick={() => setFileToDelete(null)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="cursor-pointer"
+                variant="destructive"
+                onClick={async () => {
+                  if (fileToDelete) {
+                    console.log("file name", fileToDelete.file);
+                    await handleDeleteFile(fileToDelete.file);
+                    setFileToDelete(null);
+                  }
+                }}
+              >
+                Delete
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <div className="flex justify-end gap-2">
           <Button
             variant="outline"
