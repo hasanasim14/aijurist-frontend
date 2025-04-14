@@ -60,24 +60,26 @@ export function CaseRef({ lookupData }: any) {
       return;
     }
 
+    const currentDialog = dialogRef.current;
     let scrollCheckInterval: NodeJS.Timeout;
+    let setupTimeout: NodeJS.Timeout;
 
+    // Define handleScroll first
     const handleScroll = () => {
-      if (dialogRef.current) {
-        const shouldShow = dialogRef.current.scrollTop > 100;
+      if (currentDialog) {
+        const shouldShow = currentDialog.scrollTop > 100;
         setShowBackToTop(shouldShow);
       }
     };
 
-    const setupScrollListener = () => {
-      const currentDialog = dialogRef.current;
-      if (currentDialog) {
-        currentDialog.addEventListener("scroll", handleScroll);
+    // Store handler in variable for cleanup
+    const scrollHandler = handleScroll;
 
+    const setupScrollListener = () => {
+      if (currentDialog) {
+        currentDialog.addEventListener("scroll", scrollHandler);
         handleScroll();
-        scrollCheckInterval = setInterval(() => {
-          handleScroll();
-        }, 500);
+        scrollCheckInterval = setInterval(handleScroll);
 
         setTimeout(() => {
           clearInterval(scrollCheckInterval);
@@ -85,15 +87,15 @@ export function CaseRef({ lookupData }: any) {
       }
     };
 
-    const setupTimeout = setTimeout(setupScrollListener, 300);
+    // Delay initial setup
+    setupTimeout = setTimeout(setupScrollListener, 300);
 
     return () => {
       clearTimeout(setupTimeout);
       clearInterval(scrollCheckInterval);
 
-      const currentDialog = dialogRef.current;
       if (currentDialog) {
-        currentDialog.removeEventListener("scroll", handleScroll);
+        currentDialog.removeEventListener("scroll", scrollHandler);
       }
     };
   }, [isDialogOpen]);
