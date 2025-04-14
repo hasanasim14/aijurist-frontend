@@ -30,9 +30,9 @@ export function DeleteChatModal({
 
         {/* Description */}
         <p className="mb-6 text-center">
-          Are you sure you want to delete the chat &quot;
+          Are you sure you want to delete the chat
           <br />
-          <span className="font-bold">{chat.title} ?&quot;</span>
+          <span className="font-bold"> &quot;{chat.title} ?&quot;</span>
           <br />
           This action cannot be undone.
         </p>
