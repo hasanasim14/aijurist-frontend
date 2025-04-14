@@ -3,7 +3,7 @@
 import type React from "react";
 import { User } from "@/lib/utils";
 import { Card, CardContent } from "../ui/card";
-import { Globe, Lightbulb, BookOpen } from "lucide-react";
+import { BookOpenCheck, FileText, ClipboardList } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useChatContext } from "@/context/ChatContext";
 
@@ -28,21 +28,21 @@ const Header = () => {
   const cardsData: CardData[] = [
     {
       id: 1,
-      title: "Web Research",
+      title: "General Knowledge",
       description: "Can you evict an orphan?",
-      icon: Globe,
+      icon: BookOpenCheck,
     },
     {
       id: 2,
-      title: "Creative Ideas",
-      description: "Summarize case 1947 SLD 1, (1947) 15 ITR 502 ",
-      icon: Lightbulb,
+      title: "Case Summaries",
+      description: "Summarize case 1947 SLD 1, (1947) 15 ITR 502",
+      icon: FileText,
     },
     {
       id: 3,
-      title: "Documentation",
+      title: "Legal Procedures",
       description: "How to file a case",
-      icon: BookOpen,
+      icon: ClipboardList,
     },
   ];
 
@@ -73,7 +73,7 @@ const Header = () => {
         {cardsData.map((card) => (
           <Card
             key={card.id}
-            className="flex flex-col items-center p-4 shadow-md rounded-xl dark:bg-gray-800 h-full flex-grow cursor-pointer transition-colors duration-200 hover:bg-gray-200"
+            className="flex flex-col items-center p-4 shadow-md rounded-xl dark:bg-gray-800 h-full flex-grow cursor-pointer transition-colors duration-200 hover:bg-gray-100"
             onClick={() => handleCardClick(card.description)}
           >
             <card.icon
