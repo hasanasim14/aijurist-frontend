@@ -19,9 +19,8 @@ import { ChatHistorySection } from "./appsidebar/ChatHistorySection";
 import { SidebarFooter } from "./appsidebar/SidebarFooter";
 import { DeleteChatModal } from "./appsidebar/DeleteChatModal";
 import { EditChatModal } from "./appsidebar/EditChatModal";
-import { signIn, signOut, useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
-import { Button } from "./ui/button";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
@@ -30,7 +29,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isCollapsed = state === "collapsed";
   const router = useRouter();
 
-  // State
   const [chatHistory, setChatHistory] = useState<
     Record<string, { chat_id: number; chat_title: string }[]>
   >({});
@@ -60,9 +58,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       setOpenMobile(false);
     }
   };
-
-  console.log("Google Session", session);
-  // console.log("API Session", sessionStorage.getItem("authToken"));
 
   // Logout handler
   const handleLogout = async () => {
