@@ -28,6 +28,7 @@ interface ChatMessage {
   llm_response?: string | object;
   role?: string;
   content?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lookup?: any;
   document?: string;
 }
@@ -117,6 +118,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const [showHeading, setShowHeading] = useState(true);
   const [isFirstMessage, setIsFirstMessage] = useState(true);
   const [currentDocument, setCurrentDocument] = useState<string | null>(null);
+  const [userFileFlag, setUserFileFlag] = useState(false);
 
   const initialRenderRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -125,6 +127,8 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  // useRef to store the fileIDs
+  const fileIdsRef = useRef<string[]>([]);
 
   const allMessages = useMemo(
     () => [...pastChat, ...currentMessages],
@@ -184,7 +188,8 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
       const data = await res.json();
 
       const processedPastChat = Array.isArray(data?.data)
-        ? data.data.flatMap((chat: any) => [
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          data.data.flatMap((chat: any) => [
             {
               role: "user",
               content: chat.user_query,
@@ -276,6 +281,10 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
       customQuery?: string;
       documentFlag?: boolean;
     }) => {
+      if (options?.caseIds?.length) {
+        fileIdsRef.current = options.caseIds;
+      }
+
       const userQuery = options?.customQuery || input.trim();
 
       if (!userQuery || isLoading) return;
@@ -307,18 +316,29 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         setShowHeading(false);
 
         // Request Body
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const shouldSetFileFlag = options?.documentFlag || userFileFlag;
         const requestBody: any = {
           SearchQuery: userQuery,
           chat_id: selectedChatId || activeChatId || "",
           p_question_id: questionId,
+          p_thread_id: threadId,
           summarise: !!options?.summarize,
           document: currentDocument || undefined,
-          // what we next in our queries
+          ...(shouldSetFileFlag && {
+            userFile: true,
+            fileIDs: fileIdsRef.current,
+          }),
         };
+
+        // Set the flag if either condition is true
+        if (shouldSetFileFlag) {
+          setUserFileFlag(true);
+        }
 
         // Summarize Documents object
         if (options?.summarize) {
-          requestBody.cases = options.caseIds;
+          requestBody.fileIDs = options.caseIds;
         }
 
         const res = await fetch(process.env.NEXT_PUBLIC_BASE_URL + "/v1/chat", {
@@ -365,6 +385,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
           }
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const requestBodyGenHeading: any = {
           chat_id: data?.data?.chat_id,
           SearchQuery: userQuery,
@@ -413,7 +434,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         clearTimeout(timeoutId);
         setIsLoading(false);
         inputRef.current?.focus();
-        setCurrentDocument(null); // Reset document after sending
+        setCurrentDocument(null);
       }
     },
     [
@@ -434,19 +455,17 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const handleFileUploaded = useCallback(
     (fileName: string) => {
       setCurrentDocument(fileName);
-      // setInput(`What would you like to ask about "${fileName}"? `);
-      const query = "What would you like to know about this file?";
+      const query = "Could you assist me in summarizing this file?";
+
+      const caseIds = fileName.includes(",")
+        ? fileName.split(",").map((f) => f.trim())
+        : [fileName];
+
       sendMessage({
         customQuery: query,
         documentFlag: true,
+        caseIds: caseIds,
       });
-      // setTimeout(() => {
-      //   textareaRef.current?.focus();
-      //   if (textareaRef.current) {
-      //     textareaRef.current.selectionStart = textareaRef.current.value.length;
-      //     textareaRef.current.selectionEnd = textareaRef.current.value.length;
-      //   }
-      // }, 100);
     },
     [sendMessage]
   );
@@ -589,11 +608,16 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
           } w-[90%] md:w-[60%] max-w-3xl z-10 transition-all duration-300 ease-in-out`}
         >
           <div className="bg-white shadow-lg rounded-3xl px-4 py-2 border flex flex-col items-center w-full">
-            {/* {currentDocument && (
-              <div className="w-full text-xs text-gray-500 mb-1 px-2">
-                Discussing: {currentDocument}
-              </div>
-            )} */}
+            {userFileFlag && (
+              <p
+                onClick={() => {
+                  setUserFileFlag(false);
+                }}
+                className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
+              >
+                Stop referring to uploaded document
+              </p>
+            )}
             <div className="w-full relative">
               <textarea
                 ref={textareaRef}
