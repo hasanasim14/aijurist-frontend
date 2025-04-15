@@ -40,12 +40,14 @@ const Message = React.memo(
     displayContent,
     hasLookupData,
     anchorId,
+    apiResponseIndex,
   }: {
     message: ChatMessage;
     isUserMessage: boolean;
     displayContent: string;
     hasLookupData: boolean;
     anchorId: string;
+    apiResponseIndex: any;
   }) => {
     return (
       <div
@@ -84,7 +86,10 @@ const Message = React.memo(
               )}
               {hasLookupData && (
                 <div className="absolute bottom-3 right-2">
-                  <CaseRef lookupData={message} />
+                  <CaseRef
+                    lookupData={message}
+                    apiResponseIndex={apiResponseIndex}
+                  />
                 </div>
               )}
             </div>
@@ -549,6 +554,8 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
 
   console.log("input", fileIdsRef.current.length);
 
+  let apiResponseIndex = 0;
+
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative">
       <div
@@ -569,6 +576,11 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
           {allMessages.map((message, index) => {
             const isUserMessage =
               message.role === "user" || message.user_query !== undefined;
+
+            if (!isUserMessage) {
+              apiResponseIndex++;
+            }
+
             const content = isUserMessage
               ? message.content || message.user_query
               : message.content || message.llm_response;
@@ -595,6 +607,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
                 displayContent={displayContent}
                 hasLookupData={hasLookupData}
                 anchorId={anchorId}
+                apiResponseIndex={!isUserMessage ? apiResponseIndex : undefined} //
               />
             );
           })}

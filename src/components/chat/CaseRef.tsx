@@ -30,6 +30,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Image from "next/image";
+import { CopyContent } from "./CopyContent";
 
 // Case Details Interface
 interface CaseDetails {
@@ -45,7 +46,7 @@ interface CaseDetails {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function CaseRef({ lookupData }: any) {
+export function CaseRef({ lookupData, apiResponseIndex }: any) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [caseDetails, setCaseDetails] = useState<CaseDetails>();
   const [isLoading, setIsLoading] = useState(false);
@@ -256,7 +257,7 @@ export function CaseRef({ lookupData }: any) {
                                 </span>
                               </div>
                               <div className="grid grid-cols-[100px_1fr] gap-1">
-                                <span className="text-xs font-medium text-muted-foreground">
+                                <span className="text-s font-medium text-muted-foreground">
                                   Judge:
                                 </span>
                                 <span className="text-xs">
@@ -330,15 +331,9 @@ export function CaseRef({ lookupData }: any) {
                   <Download className="h-4 w-4" />
                   <span className="hidden sm:inline">Download</span>
                 </Button>
-                {/* Copy */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 h-8 cursor-pointer"
-                >
-                  <Copy className="h-4 w-4" />
-                  <span className="hidden sm:inline">Copy</span>
-                </Button>
+
+                {/* Copy Button*/}
+                <CopyContent apiResponseIndex={apiResponseIndex} />
               </div>
             </div>
           </SheetFooter>
