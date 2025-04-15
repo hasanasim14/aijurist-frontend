@@ -1,44 +1,60 @@
 "use client";
 
-import { Copy } from "lucide-react";
-import { Button } from "../ui/button";
+import { useState } from "react";
 import { useChatContext } from "@/context/ChatContext";
+import { Button } from "../ui/button";
+import { Copy, Check } from "lucide-react";
 
-export function CopyContent({ apiResponseIndex }: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function CopyContent({ apiResponseIndex, response }: any) {
+  const [isCopied, setIsCopied] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { selectedChatId } = useChatContext();
 
-  const transformForCopy = (data: any): string => {
-    if (!data?.data || !Array.isArray(data.data)) {
-      return JSON.stringify(data);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const transformForCopy = (apiData: any): string => {
+    let combinedText = response || "";
+
+    if (apiData?.data && Array.isArray(apiData.data)) {
+      const apiContent = apiData.data
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((item: any) => {
+          const fullTitle = item.Title?.trim() || "";
+
+          const cleanContent = (item.content || [])
+            .map((text: string) => {
+              return (
+                text
+                  ?.replace(/\r/g, "")
+                  ?.replace(/&amp;/g, "&")
+                  ?.replace(/<br\s*\/?>/gi, "\n")
+                  ?.replace(/^\s+|\s+$/g, "")
+                  ?.replace(/\s{2,}/g, " ")
+                  ?.replace(/\n/g, " ") || ""
+              );
+            })
+            .join("\n");
+
+          return `\t${fullTitle}\n${cleanContent}`;
+        })
+        .join("\n\n");
+
+      if (combinedText && apiContent) {
+        combinedText += "\n\n\n";
+      }
+
+      combinedText += apiContent;
     }
 
-    return data.data
-      .map((item: any) => {
-        const fullTitle = item.Title?.trim() || "";
-
-        const cleanContent = (item.content || [])
-          .map((text: string) => {
-            return (
-              text
-                ?.replace(/\r/g, "")
-                ?.replace(/&amp;/g, "&")
-                ?.replace(/^\s+|\s+$/g, "")
-                ?.replace(/\s{2,}/g, " ")
-                ?.replace(/\n/g, " ") || ""
-            );
-          })
-          .join("\n");
-
-        return `\t${fullTitle}\n${cleanContent}`;
-      })
-      .join("\n\n");
+    return combinedText;
   };
 
   const handleCopy = async () => {
     const token = sessionStorage.getItem("authToken");
 
     try {
-      const response = await fetch(
+      setIsLoading(true);
+      const apiResponse = await fetch(
         process.env.NEXT_PUBLIC_BASE_URL + "/describe_t5",
         {
           method: "POST",
@@ -53,15 +69,21 @@ export function CopyContent({ apiResponseIndex }: any) {
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+      if (!apiResponse.ok) {
+        throw new Error(`API request failed with status ${apiResponse.status}`);
       }
 
-      const apiData = await response.json();
-      const transformedData = transformForCopy(apiData);
-      await navigator.clipboard.writeText(transformedData);
+      const apiData = await apiResponse.json();
+      const combinedText = transformForCopy(apiData);
+
+      await navigator.clipboard.writeText(combinedText);
+
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (error) {
       console.error("Error during copy operation:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -71,9 +93,10 @@ export function CopyContent({ apiResponseIndex }: any) {
       size="sm"
       className="gap-1.5 h-8 cursor-pointer"
       onClick={handleCopy}
+      disabled={isLoading || isCopied}
     >
-      <Copy className="h-4 w-4" />
-      <span className="hidden sm:inline">Copy</span>
+      {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+      <span className="hidden sm:inline">{isCopied ? "Copied!" : "Copy"}</span>
     </Button>
   );
 }
