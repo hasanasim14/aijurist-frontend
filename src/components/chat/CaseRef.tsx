@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/sheet";
 import Image from "next/image";
 import { CopyContent } from "./CopyContent";
+import { DownloadContent } from "./DownloadContent";
 
 // Case Details Interface
 interface CaseDetails {
@@ -322,15 +323,9 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
                   <RefreshCcw className="h-4 w-4" />
                   <span className="hidden sm:inline">Regenerate</span>
                 </Button>
+
                 {/* Download */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1.5 h-8 cursor-pointer"
-                >
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">Download</span>
-                </Button>
+                <DownloadContent />
 
                 {/* Copy Button*/}
                 <CopyContent apiResponseIndex={apiResponseIndex} />
