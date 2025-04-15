@@ -239,12 +239,6 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   }, [selectedChatId, fetchPastChats, setShowHeading]);
 
   useEffect(() => {
-    if (selectedChatId) {
-      scrollToTop();
-    }
-  }, [selectedChatId]);
-
-  useEffect(() => {
     if (currentMessages.length > 0 || isLoading) {
       scrollToBottom();
     }
@@ -262,6 +256,12 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
+
+  useEffect(() => {
+    if (selectedChatId) {
+      scrollToTop();
+    }
+  }, [selectedChatId, scrollToTop]);
 
   const scrollToMessage = useCallback((index: number) => {
     const anchorId = `query-${index}`;
@@ -547,6 +547,8 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
     return indices;
   }, [allMessages]);
 
+  console.log("input", fileIdsRef.current.length);
+
   return (
     <div className="flex flex-col md:flex-row h-full w-full relative">
       <div
@@ -556,11 +558,13 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         {showHeading && <Header />}
 
         <div
-          className={`flex-1 overflow-y-auto px-4 md:px-6 ${
+          className={`flex-1 overflow-y-auto md:px-6 pr-4 ${
             state === "expanded"
-              ? "md:max-w-[calc(100%-var(--sidebar-width)/4))]"
-              : "md:max-w-[calc(100%-var(--sidebar-width-icon)/4)]"
-          } mx-auto pb-32 transition-all duration-300 ease-in-out min-h-[200px]`} // Adjust min-height here to avoid excessive vertical space
+              ? "md:max-w-[calc(100%-var(--sidebar-width)/4)] ml-[50px]"
+              : "md:max-w-[calc(100%-var(--sidebar-width-icon)/4)] sm:ml-[100px]"
+          } transition-all duration-300 ease-in-out min-h-[200px] ${
+            userFileFlag ? "pb-40" : "pb-35"
+          } w-full md:w-[70%] min-w-[300px]`}
         >
           {allMessages.map((message, index) => {
             const isUserMessage =
@@ -599,7 +603,6 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
           <div ref={messagesStartRef} />
           <div ref={messagesEndRef} />
         </div>
-
         <div
           className={`fixed bottom-4 left-1/2 transform -translate-x-1/2 ${
             state === "expanded"
@@ -615,7 +618,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
                 }}
                 className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-colors"
               >
-                Stop referring to uploaded document
+                {`Stop referring to document ${fileIdsRef.current}`}
               </p>
             )}
             <div className="w-full relative">
@@ -667,10 +670,10 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
                       : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                   }`}
                   disabled={
-                    !input.trim() || isLoading
-
-                    // || input ===
-                    //   '"Sorry, your query is too Short/Vague/Irrelevant to be enhanced"'
+                    !input.trim() ||
+                    isLoading ||
+                    input ===
+                      "Sorry, your query is too Short/Vague/Irrelevant to be enhanced"
                   }
                 >
                   <ArrowUp size={18} className="m-1" />
