@@ -25,7 +25,7 @@ import toast from "react-hot-toast";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
   const { shouldCallApi } = useApiContext();
-  const { setSelectedChatId, resetPage } = useChatContext();
+  const { selectedChatId, setSelectedChatId, resetPage } = useChatContext();
   const isCollapsed = state === "collapsed";
   const router = useRouter();
 
@@ -103,6 +103,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         },
         body: JSON.stringify({ chat_id: chatToDelete.id }),
       });
+
+      // Resetting the page when the current chat is deleted
+      if (chatToDelete.id === selectedChatId) {
+        resetPage();
+      }
 
       // Update local state to remove the deleted chat
       setChatHistory((prev) => {
