@@ -286,8 +286,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         onCancel={() => setChatToEdit(null)}
         defaultTitle={chatToEdit?.title || ""}
       />
-
-      {/* <Button onClick={() => signIn("google")}>00</Button> */}
     </>
   );
 }
