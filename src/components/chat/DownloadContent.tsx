@@ -11,44 +11,58 @@ export function DownloadContent({ apiResponseIndex, response }: any) {
   const { selectedChatId } = useChatContext();
   const [isLoading, setIsLoading] = useState(false);
 
+  const cleanHtmlContent = (html: string): string => {
+    return html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>|<p>/gi, "\n")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/&amp;/gi, "&")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/^\s+|\s+$/g, "")
+      .replace(/\s{2,}/g, " ");
+  };
+
   const formatContentForPDF = (
     propResponse: string,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
     apiData: any
   ): { title: string; content: string }[] => {
     const result = [];
 
-    // Add prop response as the first item
     if (propResponse) {
       result.push({
         title: "Response from The AI Jurist",
-        content: propResponse
-          .replace(/\r/g, "")
-          .replace(/&amp;/g, "&")
-          .replace(/(<br\s*\/?>\s*)+/gi, "\n")
-          .replace(/^\s+|\s+$/g, "")
-          .replace(/\s{2,}/g, " "),
+        content: cleanHtmlContent(propResponse),
       });
     }
 
-    // Add API response data
     if (apiData?.data && Array.isArray(apiData.data)) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       apiData.data.forEach((item: any) => {
-        const title = item.Title?.trim() || "Untitled";
-        const content = (item.content || [])
-          .map((text: string) =>
-            text
-              ?.replace(/\r/g, "")
-              ?.replace(/&amp;/g, "&")
-              ?.replace(/(<br\s*\/?>\s*)+/gi, "\n")
-              ?.replace(/^\s+|\s+$/g, "")
-              ?.replace(/\s{2,}/g, " ")
-          )
-          .join("\n");
+        const title = item.Title?.trim() || "Legal Document Excerpt";
 
-        result.push({ title, content });
+        let content = Array.isArray(item.content)
+          ? item.content.map(cleanHtmlContent).join("\n\n")
+          : cleanHtmlContent(item.content || "");
+
+        content = content
+          .replace(/===== Page \d+ =====/g, "")
+          .replace(/#{1,6}\s*/g, "")
+          .replace(/\*\*(.*?)\*\*/g, "$1")
+          .replace(/^\s*-\s*/gm, "• ")
+          .replace(/(\d+\.)\s*/g, "$1 ")
+          .replace(/\s{3,}/g, "  ");
+
+        content = content.replace(
+          /(\d{4} (?:SLD|PLD|SCMR|YLR|CLC|PLC) \d+)/g,
+          "\n$1\n"
+        );
+
+        result.push({
+          title,
+          content: content.trim(),
+        });
       });
     }
 
@@ -56,66 +70,60 @@ export function DownloadContent({ apiResponseIndex, response }: any) {
   };
 
   const generatePDF = (data: { title: string; content: string }[]) => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({
+      unit: "mm",
+      format: "a4",
+      compress: true,
+    });
 
-    // Set document properties
     doc.setProperties({
-      title: "Legal Document",
-      subject: "Response Query",
+      title: "Legal Document Analysis",
+      subject: "Legal Research",
       author: "The AI Jurist",
     });
 
-    // Add image at the top (centered)
-    // Replace with your actual image path or base64 string
-    const imgData = "/logo.png"; // or use a base64 string
-    const imgWidth = 50; // adjust as needed
-    const imgHeight = 10; // adjust as needed
-
-    // Calculate center position
+    const imgData = "/logo.png";
+    const imgWidth = 50;
+    const imgHeight = 10;
     const pageWidth = doc.internal.pageSize.getWidth();
     const imgX = (pageWidth - imgWidth) / 2;
-
-    // Add image with some top margin
     doc.addImage(imgData, "PNG", imgX, 15, imgWidth, imgHeight);
 
-    // Set initial yPosition below the image with more spacing
-    let yPosition = 15 + imgHeight + 15; // image top + image height + spacing
+    // Spacing below the Image
+    let yPosition = 40;
+
+    doc.setFont("helvetica");
+    doc.setTextColor(0, 0, 0);
 
     data.forEach((item, index) => {
-      // Add title with increased spacing
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.text(item.title, 15, yPosition);
-      yPosition += 12; // Increased from 10
+      doc.text(item.title, 20, yPosition);
+      yPosition += 10;
 
-      // Add content
       doc.setFontSize(11);
       doc.setFont("helvetica", "normal");
 
-      // Split content into lines that fit the page width
-      const lines = doc.splitTextToSize(item.content, 180);
+      const lines = doc.splitTextToSize(item.content, 170);
 
-      // Check if content will fit before adding (with bottom margin)
-      const neededSpace = lines.length * 7 + 15;
-      if (yPosition + neededSpace > 270) {
-        doc.addPage();
-        yPosition = 25; // Reset with top margin
-      }
+      lines.forEach((line: string) => {
+        if (yPosition > 270) {
+          doc.addPage();
+          yPosition = 25;
+        }
+        doc.text(line, 20, yPosition);
+        yPosition += 7;
+      });
 
-      doc.text(lines, 15, yPosition);
-
-      // Calculate new position with more spacing between sections
-      yPosition += lines.length * 7 + 20; // Increased from 15
-
-      // Add new page if needed (with more bottom margin)
-      if (yPosition > 270 && index < data.length - 1) {
-        doc.addPage();
-        yPosition = 25; // Reset with top margin
+      // Add space between sections
+      if (index < data.length - 1) {
+        yPosition += 15;
       }
     });
 
     return doc;
   };
+
   const handleDownload = async () => {
     const token = sessionStorage.getItem("authToken");
     setIsLoading(true);
