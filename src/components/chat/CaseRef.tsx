@@ -86,8 +86,9 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
       }
     };
 
-    let setupTimeout: NodeJS.Timeout;
-    setupTimeout = setTimeout(setupScrollListener, 300);
+    // let setupTimeout: NodeJS.Timeout;
+    // setupTimeout = setTimeout(setupScrollListener, 300);
+    const setupTimeout: NodeJS.Timeout = setTimeout(setupScrollListener, 300);
 
     return () => {
       clearTimeout(setupTimeout);

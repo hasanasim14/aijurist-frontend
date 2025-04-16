@@ -78,7 +78,7 @@ const Header = () => {
           >
             <card.icon
               size={36}
-              className="dark:text-gray-400 mb-3"
+              className="dark:text-gray-400"
               aria-label={`Icon for ${card.title}`}
             />
             <CardContent className="text-center p-2 w-full">

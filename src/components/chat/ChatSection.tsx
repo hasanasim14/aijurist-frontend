@@ -47,6 +47,7 @@ const Message = React.memo(
     displayContent: string;
     hasLookupData: boolean;
     anchorId: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     apiResponseIndex: any;
   }) => {
     return (
@@ -167,6 +168,10 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
     if (!selectedChatId) {
       setShowHeading(true);
     }
+
+    if (resetPageTrigger) {
+      setUserFileFlag(false);
+    }
   }, [resetPageTrigger, selectedChatId, setShowHeading]);
 
   // Fetch Past Chats
@@ -243,20 +248,20 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
     initialRenderRef.current = false;
   }, [selectedChatId, fetchPastChats, setShowHeading]);
 
-  useEffect(() => {
-    if (currentMessages.length > 0 || isLoading) {
-      scrollToBottom();
-    }
-  }, [currentMessages.length, isLoading]);
-
-  useEffect(() => {
-    resizeTextarea();
-  }, [resizeTextarea]);
-
   // Memoized scroll functions
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
+
+  useEffect(() => {
+    if (currentMessages.length > 0 || isLoading) {
+      scrollToBottom();
+    }
+  }, [currentMessages.length, isLoading, scrollToBottom]);
+
+  useEffect(() => {
+    resizeTextarea();
+  }, [resizeTextarea]);
 
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -320,9 +325,9 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
       try {
         setShowHeading(false);
 
+        const shouldSetFileFlag = options?.documentFlag || userFileFlag;
         // Request Body
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const shouldSetFileFlag = options?.documentFlag || userFileFlag;
         const requestBody: any = {
           SearchQuery: userQuery,
           chat_id: selectedChatId || activeChatId || "",
@@ -552,8 +557,6 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
     return indices;
   }, [allMessages]);
 
-  console.log("input", fileIdsRef.current.length);
-
   let apiResponseIndex = 0;
 
   return (
@@ -607,7 +610,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
                 displayContent={displayContent}
                 hasLookupData={hasLookupData}
                 anchorId={anchorId}
-                apiResponseIndex={!isUserMessage ? apiResponseIndex : undefined} //
+                apiResponseIndex={!isUserMessage ? apiResponseIndex : undefined}
               />
             );
           })}
