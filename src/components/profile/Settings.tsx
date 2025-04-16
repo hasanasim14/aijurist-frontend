@@ -36,6 +36,7 @@ import {
   UserIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import DeleteAllChatsModal from "./DeleteAllChatsModal";
 
 export function Settings() {
   interface SubscriptionPlan {
@@ -44,6 +45,7 @@ export function Settings() {
   }
 
   const [isEditing, setIsEditing] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [userData, setUserData] = useState({
     name: "",
     company: "",
@@ -54,6 +56,7 @@ export function Settings() {
   const [subscriptionPlans, setSubscriptionPlans] = useState<
     SubscriptionPlan[]
   >([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(true);
 
   const handleEdit = () => {
     setTempUserData({
@@ -76,7 +79,7 @@ export function Settings() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            email: "hasan.asim14@gmail.com",
+            email: user?.email,
             firstName: tempUserData.name.split(" ")[0],
             lastName: tempUserData.name.split(" ").slice(1).join(" "),
             companyName: tempUserData.company,
@@ -148,7 +151,7 @@ export function Settings() {
         {label}
       </SelectItem>
     ));
-  }, [cities]);
+  }, []);
 
   // Get Plan Updates
   useEffect(() => {
@@ -488,6 +491,25 @@ export function Settings() {
                         Upgrade to {plan.name}
                       </Button>
                     ))}
+                </div>
+
+                {/* Delete All Chats */}
+                <div className="pt-4">
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="cursor-pointer"
+                  >
+                    Delete All Chats
+                  </Button>
+
+                  {isDeleteModalOpen && (
+                    <DeleteAllChatsModal
+                      email={user?.email || ""}
+                      isOpen={isDeleteModalOpen}
+                      onClose={() => setIsDeleteModalOpen(false)}
+                    />
+                  )}
                 </div>
               </div>
             </CardContent>
