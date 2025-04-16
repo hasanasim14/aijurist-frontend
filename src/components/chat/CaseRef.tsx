@@ -11,8 +11,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowRight,
   ChevronUp,
-  Copy,
-  Download,
   ExternalLink,
   Eye,
   RefreshCcw,
@@ -64,7 +62,6 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
 
     const currentDialog = dialogRef.current;
     let scrollCheckInterval: NodeJS.Timeout;
-    let setupTimeout: NodeJS.Timeout;
 
     // Define handleScroll first
     const handleScroll = () => {
@@ -89,7 +86,7 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
       }
     };
 
-    // Delay initial setup
+    let setupTimeout: NodeJS.Timeout;
     setupTimeout = setTimeout(setupScrollListener, 300);
 
     return () => {
@@ -325,10 +322,16 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
                 </Button>
 
                 {/* Download */}
-                <DownloadContent />
+                <DownloadContent
+                  apiResponseIndex={apiResponseIndex}
+                  response={lookupData.content}
+                />
 
                 {/* Copy Button*/}
-                <CopyContent apiResponseIndex={apiResponseIndex} />
+                <CopyContent
+                  apiResponseIndex={apiResponseIndex}
+                  response={lookupData.content}
+                />
               </div>
             </div>
           </SheetFooter>

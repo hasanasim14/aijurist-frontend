@@ -164,7 +164,7 @@ const MarkDownComponent: React.FC<MarkDownComponentProps> = ({ children }) => {
       );
     }
   } catch (error) {
-    console.log("Content is not JSON, rendering as plain markdown", error);
+    console.error("Content is not JSON, rendering as plain markdown", error);
   }
 
   return renderMarkdown(children);

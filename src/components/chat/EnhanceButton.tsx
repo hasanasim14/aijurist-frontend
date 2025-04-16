@@ -52,7 +52,7 @@ export function EnhanceButton({
     if (currentText !== originalTextRef.current && currentText !== text) {
       setIsEnhanced(false);
     }
-  }, [getInputText]);
+  }, [getInputText, text]);
 
   const handleEnhance = async () => {
     originalTextRef.current = text;
