@@ -5,6 +5,14 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Footer from "@/components/utility/Footer";
 
+const SafeHTML = ({ html }: { html: string }) => {
+  const styledHtml = html.replace(
+    /<a /g,
+    '<a class="text-blue-600 hover:text-blue-800 hover:underline" '
+  );
+  return <span dangerouslySetInnerHTML={{ __html: styledHtml }} />;
+};
+
 const PrivacyPolicy = () => {
   const router = useRouter();
   const sections = [
@@ -87,7 +95,7 @@ const PrivacyPolicy = () => {
           items: [
             {
               subitem: "3.1 Queries and Uploaded Files:",
-              description: `We use third-party analytics services, such as Google Analytics, to help analyze how users use the Services. These services may use cookies (though we currently do not deploy other cookies) or other tracking technologies to collect information such as your IP address, time of visit, whether you are a return visitor, and any referring website. We use this information to improve our Services. Google's ability to use and share information collected by Google Analytics about your visits is restricted by the Google Analytics Terms of Service and the Google Privacy Policy. You can learn more here: https://support.google.com/analytics/answer/7318509?hl=en `,
+              description: `We use third-party analytics services, such as Google Analytics, to help analyze how users use the Services. These services may use cookies (though we currently do not deploy other cookies) or other tracking technologies to collect information such as your IP address, time of visit, whether you are a return visitor, and any referring website. We use this information to improve our Services. Google's ability to use and share information collected by Google Analytics about your visits is restricted by the Google Analytics Terms of Service and the Google Privacy Policy. You can learn more at <a href="https://support.google.com/analytics/answer/7318509?hl=en" target="_blank" rel="noopener noreferrer">Google Analytics Privacy Policy</a>.`,
             },
           ],
         },
@@ -181,13 +189,11 @@ const PrivacyPolicy = () => {
             },
             {
               subitem: "2.1 Cloud Hosting:",
-              description:
-                "Our Services are hosted on Microsoft Azure. Data stored on our platform resides within their infrastructure. [Link to Microsoft Azure Privacy Information]",
+              description: `Our Services are hosted on Microsoft Azure. Data stored on our platform resides within their infrastructure. <a href="https://azure.microsoft.com/en-us/explore/trusted-cloud/privacy">Microsoft Azure Privacy Information</a>`,
             },
             {
               subitem: "2.2 AI Processing (OpenAI):",
-              description:
-                "To provide certain features (like generating summaries, drafts, or processing complex queries), we may send your queries and potentially relevant excerpts of uploaded content to OpenAI's API. We rely on OpenAI's standard API data usage policies, which state that data submitted via their API is not used for training their models. You can review their policies here: [Link to relevant OpenAI API Data Usage Policy]. Your use of our Services constitutes acknowledgment of this processing.",
+              description: `To provide certain features (like generating summaries, drafts, or processing complex queries), we may send your queries and potentially relevant excerpts of uploaded content to OpenAI's API. We rely on OpenAI's standard API data usage policies, which state that data submitted via their API is not used for training their models. You can review their policies here: <a href="https://openai.com/policies/usage-policies/">OpenAI API Data Usage Policy</a>. Your use of our Services constitutes acknowledgment of this processing.`,
             },
             {
               subitem: "2.3 Analytics Providers:",
@@ -336,10 +342,29 @@ const PrivacyPolicy = () => {
     {
       title: "Contact Us",
       content: [
-        "If you have any questions about this Privacy Policy, please contact us at:",
-        "support@theaijurist.com",
-        "[Your Company Name] ",
-        "[Your Company Address, Karachi, Pakistan]",
+        {
+          subtitle: " ",
+          items: [
+            {
+              subitem: " ",
+              description:
+                "If you have any questions about this Privacy Policy, please contact us at:",
+            },
+            {
+              subitem: " ",
+              description:
+                "<a href='mailto:support@theaijurist.com'>support@theaijurist.com</a>",
+            },
+            {
+              subitem: " ",
+              description: "[Your Company Name]",
+            },
+            {
+              subitem: " ",
+              description: "Your Company Address, Karachi, Pakistan]",
+            },
+          ],
+        },
       ],
     },
   ];
@@ -348,7 +373,7 @@ const PrivacyPolicy = () => {
     <div className="bg-gray-50 min-h-screen">
       <Button
         variant="outline"
-        onClick={() => router.back()}
+        onClick={() => router.push("/")}
         className="fixed top-6 left-6 z-10 flex items-center px-4 py-2 shadow-sm cursor-pointer"
       >
         <ArrowLeft className="mr-2" />
@@ -373,14 +398,15 @@ const PrivacyPolicy = () => {
             Introduction
           </h1>
           <p className="text-center">
-            Welcome to The AI Jurist ("Company," "we," "us," or "our"). We are
-            committed to protecting the privacy of our users ("User," "you," or
-            "your"). This Privacy Policy explains how we collect, use, disclose,
-            and safeguard your information when you use our AI-powered legal
-            assistant platform, including any associated software applications
-            and websites (collectively, the "Services"). Please read this
-            privacy policy carefully. If you do not agree with the terms of this
-            privacy policy, please do not access the Services.
+            Welcome to The AI Jurist (&quot;Company,&quot; &quot;we,&quot;
+            &quot;us,&quot; or &quot;our&quot;). We are committed to protecting
+            the privacy of our users (&quot;User,&quot; &quot;you,&quot; or
+            &quot;your&quot;). This Privacy Policy explains how we collect, use,
+            disclose, and safeguard your information when you use our AI-powered
+            legal assistant platform, including any associated software
+            applications and websites (collectively, the &quot;Services&quot;).
+            Please read this privacy policy carefully. If you do not agree with
+            the terms of this privacy policy, please do not access the Services.
           </p>
         </div>
 
@@ -414,9 +440,14 @@ const PrivacyPolicy = () => {
                                 </span>
                               )}{" "}
                               <span>
-                                {item.description
-                                  ? item.description
-                                  : String(item)}
+                                {typeof item.description === "string" &&
+                                item.description.includes("<a ") ? (
+                                  <SafeHTML html={item.description} />
+                                ) : item.description ? (
+                                  item.description
+                                ) : (
+                                  String(item)
+                                )}
                               </span>
                             </li>
                           ))}
