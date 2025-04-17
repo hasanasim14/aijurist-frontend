@@ -56,7 +56,7 @@ export function Settings() {
   const [subscriptionPlans, setSubscriptionPlans] = useState<
     SubscriptionPlan[]
   >([]);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const handleEdit = () => {
     setTempUserData({
@@ -277,7 +277,6 @@ export function Settings() {
                 </div>
                 {!isEditing ? (
                   <Button
-                    variant="outline"
                     size="sm"
                     onClick={handleEdit}
                     className="cursor-pointer"

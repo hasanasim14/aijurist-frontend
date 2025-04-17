@@ -13,9 +13,9 @@ import {
   ChevronUp,
   ExternalLink,
   Eye,
-  RefreshCcw,
-  ThumbsDown,
-  ThumbsUp,
+  // RefreshCcw,
+  // ThumbsDown,
+  // ThumbsUp,
   X,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
