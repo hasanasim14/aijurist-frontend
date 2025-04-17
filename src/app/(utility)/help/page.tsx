@@ -15,7 +15,6 @@ import {
 import { useEffect } from "react";
 import Footer from "@/components/utility/Footer";
 
-// Menu items now point to section IDs
 const items = [
   {
     title: "Home",
@@ -53,7 +52,9 @@ export default function Help() {
         event.preventDefault();
         const targetId = link.getAttribute("href");
         const targetElement = document.querySelector(targetId);
-        targetElement.scrollIntoView({ behavior: "smooth" });
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: "smooth" });
+        }
       });
     });
 
@@ -67,8 +68,8 @@ export default function Help() {
   return (
     <div className="flex flex-col min-h-screen">
       <div className="flex flex-1 overflow-hidden">
-        <SidebarProvider>
-          <Sidebar className="flex-shrink-0 w-64">
+        <SidebarProvider className="w-25">
+          <Sidebar className="flex-shrink-0 w-56 border-r">
             <SidebarContent>
               <SidebarGroup>
                 <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -77,8 +78,11 @@ export default function Help() {
                     {items.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton asChild>
-                          <a href={item.url}>
-                            <item.icon />
+                          <a
+                            href={item.url}
+                            className="flex items-center gap-3"
+                          >
+                            <item.icon className="w-5 h-5" />
                             <span>{item.title}</span>
                           </a>
                         </SidebarMenuButton>
@@ -92,29 +96,29 @@ export default function Help() {
         </SidebarProvider>
 
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto p-8">
-          <section id="home" className="min-h-screen py-20">
-            <h1 className="text-5xl font-bold mb-6">Home Section</h1>
+        <main className="flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full">
+          <section id="home" className="min-h-screen py-12">
+            <h1 className="text-4xl font-bold mb-6">Home Section</h1>
             <p className="text-lg">This is the home section content...</p>
           </section>
 
-          <section id="inbox" className="min-h-screen py-20">
-            <h1 className="text-5xl font-bold mb-6">Inbox Section</h1>
+          <section id="inbox" className="min-h-screen py-12">
+            <h1 className="text-4xl font-bold mb-6">Inbox Section</h1>
             <p className="text-lg">This is the inbox section content...</p>
           </section>
 
-          <section id="calendar" className="min-h-screen py-20">
-            <h1 className="text-5xl font-bold mb-6">Calendar Section</h1>
+          <section id="calendar" className="min-h-screen py-12">
+            <h1 className="text-4xl font-bold mb-6">Calendar Section</h1>
             <p className="text-lg">This is the calendar section content...</p>
           </section>
 
-          <section id="search" className="min-h-screen py-20">
-            <h1 className="text-5xl font-bold mb-6">Search Section</h1>
+          <section id="search" className="min-h-screen py-12">
+            <h1 className="text-4xl font-bold mb-6">Search Section</h1>
             <p className="text-lg">This is the search section content...</p>
           </section>
 
-          <section id="settings" className="min-h-screen py-20">
-            <h1 className="text-5xl font-bold mb-6">Settings Section</h1>
+          <section id="settings" className="min-h-screen py-12">
+            <h1 className="text-4xl font-bold mb-6">Settings Section</h1>
             <p className="text-lg">This is the settings section content...</p>
           </section>
         </main>
