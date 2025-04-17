@@ -30,6 +30,8 @@ import {
 import Image from "next/image";
 import { CopyContent } from "./CopyContent";
 import { DownloadContent } from "./DownloadContent";
+import ThumbsUpComponent from "./ThumbsUp";
+import ThumbsDownComponent from "./ThumbsDown";
 
 // Case Details Interface
 interface CaseDetails {
@@ -219,13 +221,13 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
                     const caseItem = lookupData.lookup[key];
                     return (
                       <AccordionItem key={key} value={key}>
-                        <AccordionTrigger className="text-sm font-medium cursor-pointer">
+                        <AccordionTrigger className="text-sm font-medium cursor-pointer hover:no-underline w-full">
                           <div className="flex items-center justify-between w-full">
-                            <span>
+                            <span className="truncate flex-1">
                               {caseItem.Title} ({caseItem.id})
                             </span>
                             <div
-                              className="h-8 w-8 p-0 ml-2 cursor-pointer flex items-center justify-center rounded-md hover:bg-accent"
+                              className="h-6 w-6 p-0 cursor-pointer flex items-center justify-center rounded-md hover:bg-accent ml-auto"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleViewDetails(caseItem);
@@ -238,7 +240,7 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
                         </AccordionTrigger>
                         <AccordionContent>
                           <Card className="border-0 shadow-none p-0">
-                            <CardContent className="p-1 space-y-1 1/2">
+                            <CardContent className="p-1 space-y-1">
                               <div className="grid grid-cols-[100px_1fr] gap-1">
                                 <span className="text-s font-medium text-muted-foreground">
                                   Court
@@ -292,35 +294,37 @@ export function CaseRef({ lookupData, apiResponseIndex }: any) {
                   Is this helpful?
                 </span>
                 {/* Thumbs Up */}
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full cursor-pointer"
                 >
                   <ThumbsUp className="h-4 w-4" />
                   <span className="sr-only">Helpful</span>
-                </Button>
+                </Button> */}
+                <ThumbsUpComponent />
                 {/* Thumbs Down */}
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 rounded-full cursor-pointer"
                 >
                   <ThumbsDown className="h-4 w-4" />
                   <span className="sr-only">Not helpful</span>
-                </Button>
+                </Button> */}
+                <ThumbsDownComponent />
               </div>
 
               <div className="flex items-center gap-2">
                 {/* Regenerate */}
-                <Button
+                {/* <Button
                   variant="ghost"
                   size="sm"
                   className="gap-1.5 h-8 cursor-pointer"
                 >
                   <RefreshCcw className="h-4 w-4" />
                   <span className="hidden sm:inline">Regenerate</span>
-                </Button>
+                </Button> */}
 
                 {/* Download */}
                 <DownloadContent
