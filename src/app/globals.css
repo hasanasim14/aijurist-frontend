@@ -127,38 +127,3 @@
     font-family: "Poppins", sans-serif;
   }
 }
-
-/* Remove yellow focus outline when clicking anchors */
-:target {
-  outline: none;
-  box-shadow: none;
-  background: transparent;
-}
-
-.preferences {
-  display: inline-flex;
-  height: 2rem;
-  width: 2rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.375rem;
-  cursor: pointer;
-}
-
-.preferences:hover {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
-}
-
-.caseref-actionbtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.375rem;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.caseref-actionbtn:hover {
-  color: var(--primary);
-}
