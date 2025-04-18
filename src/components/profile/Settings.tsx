@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import DeleteAllChatsModal from "./DeleteAllChatsModal";
+import BackButton from "../utility/BackButtton";
 
 export function Settings() {
   interface SubscriptionPlan {
@@ -210,6 +211,8 @@ export function Settings() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
+      <BackButton />
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-black">
           Account Settings
@@ -453,9 +456,9 @@ export function Settings() {
                 <div className="space-y-2 p-4 bg-gray-50 rounded-lg">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500">Plan Usage</span>
-                    <span className="font-medium">10% of 125 Messages</span>
+                    <span className="font-medium">0% of Limit</span>
                   </div>
-                  <Progress value={10} className="h-2 bg-gray-200" />
+                  <Progress value={0} className="h-2 bg-gray-200" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

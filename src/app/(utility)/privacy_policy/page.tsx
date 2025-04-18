@@ -1,9 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import Footer from "@/components/utility/Footer";
+import BackButton from "@/components/utility/BackButtton";
 
 const SafeHTML = ({ html }: { html: string }) => {
   const styledHtml = html.replace(
@@ -14,7 +12,6 @@ const SafeHTML = ({ html }: { html: string }) => {
 };
 
 const PrivacyPolicy = () => {
-  const router = useRouter();
   const sections = [
     // Definitions
     {
@@ -371,17 +368,10 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
-      <Button
-        variant="outline"
-        onClick={() => router.push("/")}
-        className="fixed top-6 left-6 z-10 flex items-center px-4 py-2 shadow-sm cursor-pointer"
-      >
-        <ArrowLeft className="mr-2" />
-        Go Back
-      </Button>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <BackButton />
+
         {/* Policy Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
