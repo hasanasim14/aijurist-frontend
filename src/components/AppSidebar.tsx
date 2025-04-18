@@ -21,6 +21,7 @@ import { DeleteChatModal } from "./appsidebar/DeleteChatModal";
 import { EditChatModal } from "./appsidebar/EditChatModal";
 import { signOut, useSession } from "next-auth/react";
 import toast from "react-hot-toast";
+import NotLoggedInModal from "./NotLoggedInModal";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, isMobile, setOpenMobile, toggleSidebar } = useSidebar();
@@ -42,6 +43,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   } | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [openLogoutModal, setOpenLogoutModal] = useState(false);
   const { data: session } = useSession();
 
   // Handle mobile trigger
@@ -218,6 +220,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         );
 
         const data = await res.json();
+
+        if (data?.detail?.message === "User Logged Out") {
+          setOpenLogoutModal(true);
+          console.log("Logged out");
+        }
+
         setChatHistory(data?.data);
       } catch (error) {
         console.error("Error fetching chat titles:", error);
@@ -238,6 +246,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     <>
       {/* Mobile trigger button */}
       <MobileTrigger isMobile={isMobile} onTrigger={handleMobileTrigger} />
+
+      <NotLoggedInModal open={openLogoutModal} />
 
       <Sidebar collapsible="icon" {...props}>
         <SidebarContent className={cn(isMobile ? "p-2" : "p-1")}>

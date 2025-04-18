@@ -22,6 +22,7 @@ import ChatAnchorLinks from "./ChatAnchorLink";
 import Header from "./Header";
 import Image from "next/image";
 import MarkDownComponent from "@/lib/markdown";
+import NotLoggedInModal from "../NotLoggedInModal";
 
 interface ChatMessage {
   user_query?: string | object;
@@ -125,6 +126,7 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
   const [isFirstMessage, setIsFirstMessage] = useState(true);
   const [currentDocument, setCurrentDocument] = useState<string | null>(null);
   const [userFileFlag, setUserFileFlag] = useState(false);
+  const [openLogoutModal, setOpenLogoutModal] = useState(false);
 
   const initialRenderRef = useRef(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -196,6 +198,11 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
         }
       );
       const data = await res.json();
+
+      if (data?.detail?.message === "User Logged Out") {
+        setOpenLogoutModal(true);
+        console.log("Logged out");
+      }
 
       const processedPastChat = Array.isArray(data?.data)
         ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -657,6 +664,8 @@ const ChatSection: FunctionComponent<ChatSectionProps> = () => {
                 }}
               />
             </div>
+
+            <NotLoggedInModal open={openLogoutModal} />
 
             <div className="w-full flex justify-between items-center pt-2">
               <div className="flex gap-2">
